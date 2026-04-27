@@ -1,5 +1,51 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables
 .env
-node_modules
-dist
-coverage
+.env.*
+!.env.example
+
+# Build output
+dist/
+**/dist/
+dist-ssr/
+**/dist-ssr/
+build/
+**/build/
+coverage/
+**/coverage/
+
+# Prisma generated client
+backend/generated/
+backend/generated/prisma/
+
+# Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Caches
+.cache/
+.vite/
+.eslintcache
+*.tsbuildinfo
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Docker local data
+*.pid
