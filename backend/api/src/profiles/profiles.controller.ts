@@ -19,10 +19,7 @@ export class ProfilesController {
 
     @Post()
     create(@Body() createProfileDto: CreateProfileDto) {
-        return {
-            name: createProfileDto.name,
-            description: createProfileDto.description
-        };
+        return this.profilesService.createProfile(createProfileDto);
     }
 
     @Put(':id')
