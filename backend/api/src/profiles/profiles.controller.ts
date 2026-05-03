@@ -7,4 +7,10 @@ export class ProfilesController {
     findall() {
         return [];
     }
+
+    @Get('test')
+    testing() {
+        return ("Test succesful");
+    }
 }
+
