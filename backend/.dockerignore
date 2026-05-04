@@ -1,8 +1,0 @@
-node_modules
-api/node_modules
-generated
-api/dist
-api/coverage
-.env
-api/.git
-*.log
