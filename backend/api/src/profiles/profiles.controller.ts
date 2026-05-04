@@ -1,7 +1,8 @@
-import { Controller, Get, Query, Param, Post, Body, Put, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, Param, Post, Body, Put, Delete, HttpCode, HttpStatus, NotFoundException, ParseUUIDPipe, ValidationPipe } from '@nestjs/common';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ProfilesService } from './profiles.service';
+import type { UUID } from 'crypto';
 
 @Controller('profiles')
 export class ProfilesController {
@@ -11,32 +12,33 @@ export class ProfilesController {
     findall() {
         return this.profilesService.findAll();
     }
-
+    
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.profilesService.findOne(id);
+    findOne(@Param('id', ParseUUIDPipe) id: UUID) {
+        try {
+            return this.profilesService.findOne(id);
+        } catch(error) {
+            throw new NotFoundException(error.message);
+        }
     }
 
     @Post()
-    create(@Body() createProfileDto: CreateProfileDto) {
+    create(@Body(new ValidationPipe()) createProfileDto: CreateProfileDto) {
         return this.profilesService.createProfile(createProfileDto);
     }
 
     @Put(':id')
     update(
-        @Param('id') id: string,
-        @Body() updateProfileDto: UpdateProfileDto
+        @Param('id', ParseUUIDPipe) id: UUID,
+        @Body(new ValidationPipe()) updateProfileDto: UpdateProfileDto
     ) {
-        return {
-            id,
-            ...updateProfileDto
-        };
+        return this.profilesService.updateProfile(updateProfileDto, id);
     }
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    remove(@Param('id') id: string) {
-
+    remove(@Param('id', ParseUUIDPipe) id: UUID) {
+        this.profilesService.deleteProfile(id);
     }
 
 }
