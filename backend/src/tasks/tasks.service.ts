@@ -41,9 +41,8 @@ export class TasksService {
     updateTask(id: string, updatedFields: any) {
         const taskToUpdate = this.getTaskById(id);
         if (taskToUpdate != undefined) {
-            const newTask = Object.assign(taskToUpdate, updatedFields);
-            this.tasks = this.tasks.map((task) => (task.id === id ? newTask : Task));
-            return newTask;
+            Object.assign(taskToUpdate, updatedFields);
+            return taskToUpdate;
         }
     }
 
