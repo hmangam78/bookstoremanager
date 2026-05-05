@@ -33,4 +33,21 @@ export class BooksService {
     deleteBook(id: string) {
         this.books = this.books.filter((book) => book.id !== id);
     }
+
+    getBookById(id: string) {
+        return this.books.find((book) => book.id === id);
+    }
+
+    getBookByISBN(isbn: string) {
+        return this.books.find((book) => book.isbn === isbn);
+    }
+
+    updateBookData(id: string, updatedData: any) {
+        const bookToUpdate = this.getBookById(id);
+        if (!bookToUpdate) {
+            return ;
+        }
+        Object.assign(bookToUpdate, updatedData);
+        return bookToUpdate;
+    }
 }
