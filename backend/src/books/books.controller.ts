@@ -1,11 +1,17 @@
 import { Controller, Get, Post, Body, Delete, Param, Patch, Query } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDTO, UpdateBookDTO } from './dto/book.dto';
+import { ParseIntPipe } from '@nestjs/common';
 
 @Controller('books')
 export class BooksController {
 
     constructor(private bookService: BooksService) {}
+
+    @Get('by-title-author')
+    getManyByTitleOrAuthor(@Query('query') title: string) {
+        return this.bookService.getManyByTitleOrAuthor(title);
+    }
 
     @Get('by-isbn')
     getOneByISBN(@Query('isbn') isbn: string) {
@@ -13,7 +19,7 @@ export class BooksController {
     }
     
     @Get(':id')
-    getOneById(@Param('id') id: string) {
+    getOneById(@Param('id', ParseIntPipe) id: number) {
         return this.bookService.getBookById(id);
     }
     
@@ -23,17 +29,17 @@ export class BooksController {
     }
 
     @Post()
-    createBook(@Body() newBook: CreateBookDTO){
+    createBook(@Body() newBook: CreateBookDTO) {
         return this.bookService.createBook(newBook);
     }
 
     @Delete(':id')
-    deleteBook(@Param('id') id: string){
+    deleteBook(@Param('id', ParseIntPipe) id: number) {
         return this.bookService.deleteBook(id);
     }
 
     @Patch(':id')
-    updateBookData(@Param('id') id: string, @Body() updatedData: UpdateBookDTO) {
+    updateBookData(@Param('id', ParseIntPipe) id: number, @Body() updatedData: UpdateBookDTO) {
         return this.bookService.updateBookData(id, updatedData);
     }
 }

@@ -1,53 +1,53 @@
 import { Injectable } from '@nestjs/common';
-import { CreateBookDTO } from './dto/book.dto';
-import { randomUUID } from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Book } from './entities/bookEntity';
+import { CreateBookDTO, UpdateBookDTO } from './dto/book.dto';
+import Fuse from 'fuse.js';
 
 @Injectable()
 export class BooksService {
-    private books = [
-        {
-            id: '1',
-            title: 'El capitán Alatriste',
-            author: 'Arturo Pérez-Reverte',
-            isbn: '91629318629',
-            price: 9.95,
-            stock: 1,
-            description: 'Las aventuras del Capitán Alatriste.',
-            format: 'bolsillo'
-        }
-    ];
+
+    constructor(
+        @InjectRepository(Book)
+        private readonly booksRepository: Repository<Book>,
+    ) {}
 
     getAllBooks() {
-        return this.books;
+        return this.booksRepository.find();
     }
 
     createBook(data: CreateBookDTO) {
-        const newBook = {
-            id: randomUUID(),
-            ...data
-        }
-        this.books.push(newBook);
-        return newBook;
+        return this.booksRepository.save(data);
     }
 
-    deleteBook(id: string) {
-        this.books = this.books.filter((book) => book.id !== id);
+    deleteBook(id: number) {
+        return this.booksRepository.delete(id);
     }
 
-    getBookById(id: string) {
-        return this.books.find((book) => book.id === id);
+    getBookById(id: number) {
+        return this.booksRepository.findOneBy({ id });
     }
 
     getBookByISBN(isbn: string) {
-        return this.books.find((book) => book.isbn === isbn);
+        return this.booksRepository.findOneBy({ isbn });
     }
 
-    updateBookData(id: string, updatedData: any) {
-        const bookToUpdate = this.getBookById(id);
-        if (!bookToUpdate) {
-            return ;
-        }
-        Object.assign(bookToUpdate, updatedData);
-        return bookToUpdate;
+    async updateBookData(id: number, updatedData: UpdateBookDTO) {
+        await this.booksRepository.update(id, updatedData);
+        return this.booksRepository.findOneBy({ id });
     }
+
+    async getManyByTitleOrAuthor(query: string) {
+        const books = await this.getAllBooks();
+
+        const fuse = new Fuse(books, {
+            keys: ['title', 'author'],
+            includeScore: true
+        })
+
+        const result = fuse.search(query);
+        return result;
+    }
+
 }
