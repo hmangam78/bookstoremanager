@@ -25,4 +25,8 @@ export class Book {
     
     @Column()
     format: string;
+
+    @Column({ type: 'text', array: true, default: [] })
+    genre: string[];
+
 }

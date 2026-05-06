@@ -1,4 +1,4 @@
-import { IsNumber, IsPositive } from "class-validator";
+import { IsNumber, IsPositive, Max } from "class-validator";
 
 export class CreateSaleDTO {
     @IsNumber()

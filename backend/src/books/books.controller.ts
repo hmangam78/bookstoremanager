@@ -12,6 +12,11 @@ export class BooksController {
     getManyByTitleOrAuthor(@Query('query') title: string) {
         return this.bookService.getManyByTitleOrAuthor(title);
     }
+    
+    @Get('by-genre')
+    getManyByGenre(@Query('query') genre: string) {
+        return this.bookService.getManyByGenre(genre);
+    }
 
     @Get('by-isbn')
     getOneByISBN(@Query('isbn') isbn: string) {

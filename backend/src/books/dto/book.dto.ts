@@ -2,9 +2,13 @@ import { IsNumber, IsPositive, Min, IsOptional } from "class-validator";
 
 export class CreateBookDTO {
     title: string;
+
     author: string;
+
     description: string;
+
     isbn: string;
+
     @IsNumber()
     @IsPositive({ message: 'price must be a positive number' })
     price: number;
@@ -12,7 +16,10 @@ export class CreateBookDTO {
     @IsNumber()
     @Min(0, { message: 'stock cannot be negative '})
     stock: number;
+
     format: string;
+
+    genre: string[];
 }
 
 export class UpdateBookDTO {
@@ -38,4 +45,7 @@ export class UpdateBookDTO {
     @Min(0, { message: 'stock cannot be negative '})
     stock?: number;
     format?: string;
+
+    @IsOptional()
+    genre?: string[];
 }

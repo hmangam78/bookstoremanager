@@ -50,4 +50,16 @@ export class BooksService {
         return result;
     }
 
+    async getManyByGenre(query: string) {
+        const books = await this.getAllBooks();
+
+        const fuse = new Fuse(books, {
+            keys: ['genre'],
+            includeScore: true
+        })
+
+        const result = fuse.search(query);
+        return result;
+    }
+
 }
