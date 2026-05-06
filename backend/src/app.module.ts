@@ -3,6 +3,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { BooksModule } from './books/books.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SalesModule } from './sales/sales.module';
+import { BasketModule } from './basket/basket.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SalesModule } from './sales/sales.module';
       autoLoadEntities: true,
       synchronize: true, // solo en desarrollo
     }),
+    BasketModule,
   ],
   controllers: [],
   providers: [],
