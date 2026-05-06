@@ -20,7 +20,12 @@ export class SalesService {
 
     //Book historic
     findByBook(bookId: number) {
-        return this.saleRepo.find({ where: { book: {id: bookId } }, relations: ['book'], order: { createdAt: 'DESC' } });
+        return this.saleRepo
+            .createQueryBuilder('sale')
+            .leftJoinAndSelect('sale.book', 'book')
+            .where('book.id = :bookId', { bookId })
+            .orderBy('sale.createdAt', 'DESC')
+            .getMany();
     }
 
     //Sale
@@ -51,6 +56,45 @@ export class SalesService {
             });
 
             return manager.save(sale);
+        })
+    }
+
+    //Bulk sale, for basket checkout
+    async createBulkSale(items: Array<{ bookId: number; quantity: number; unitPrice?: number }>) {
+        if (!items.length) throw new BadRequestException('No items to sell');
+
+        return await this.dataSource.transaction(async manager => {
+            const sales: Sale[] = [];
+
+            for (const item of items) {
+                const { bookId, quantity, unitPrice } = item;
+
+                if (quantity <= 0) throw new BadRequestException(`Invalid quantity for book ${bookId}`);
+
+                const book = await manager
+                    .createQueryBuilder(Book, 'book')
+                    .setLock('pessimistic_write')
+                    .where('book.id = :id', { id: bookId })
+                    .getOne();
+                
+                if (!book) throw new NotFoundException(`Book ${bookId} not found`);
+                if (book.stock < quantity) throw new BadRequestException(`Insufficient stock for book ${bookId}`);
+
+                book.stock -= quantity;
+                await manager.save(book);
+
+                const price = unitPrice ?? book.price ?? 0;
+                const sale = manager.create(Sale, {
+                    book,
+                    quantity,
+                    unitPrice: price,
+                    total: Number((price * quantity).toFixed(2)),
+                });
+
+                sales.push(await manager.save(sale));
+            }
+
+            return sales;
         })
     }
 }

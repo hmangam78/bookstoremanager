@@ -20,4 +20,5 @@ export class SalesController {
     create(@Body() dto: CreateSaleDTO) {
         return this.salesService.createSale(dto);
     }
+
 }
