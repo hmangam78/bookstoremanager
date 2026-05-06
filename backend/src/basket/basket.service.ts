@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { BooksService } from 'src/books/books.service';
 import { SalesService } from 'src/sales/sales.service';
 
@@ -27,11 +27,11 @@ export class BasketService {
     async addBookToBasket(bookId: number, quantity: number) {
         const book = await this.booksService.getBookById(bookId);
         if (!book) {
-            throw new Error('Book not found');
+            throw new NotFoundException('Book not found');
         }
 
         if (book.stock < quantity) {
-            throw new Error('Not enough units');
+            throw new BadRequestException('Not enough units');
         }
 
         const basketItem = {
@@ -56,7 +56,7 @@ export class BasketService {
         this.basket = this.basket.filter((item) => item.bookId !== bookId);
         
         if (this.basket.length === initialLength){
-            throw new Error('Item not found in basket');
+            throw new NotFoundException('Item not found in basket');
         }
         
         return this.basket;
@@ -64,16 +64,16 @@ export class BasketService {
 
     async setQuantity(bookId: number, newQuantity: number) {
         if (!Number.isInteger(newQuantity) || newQuantity <= 0) {
-            throw new Error('Invalid quantity');
+            throw new BadRequestException('Invalid quantity');
         }
 
         const book = await this.booksService.getBookById(bookId);
-        if (!book) throw new Error('Book not found');
-        if (book.stock < newQuantity) throw new Error('Not enough units');
+        if (!book) throw new NotFoundException('Book not found');
+        if (book.stock < newQuantity) throw new BadRequestException('Not enough units');
 
         const item = this.basket.find((i) => i.bookId === bookId);
         if (!item) {
-            throw new Error('Book not in basket');
+            throw new NotFoundException('Book not in basket');
         }
 
         item.quantity = newQuantity;
@@ -83,7 +83,7 @@ export class BasketService {
     }
 
     async checkoutBasket() {
-        if (!this.basket.length) throw new Error('Basket is empty');
+        if (!this.basket.length) throw new BadRequestException('Basket is empty');
 
         const items = this.basket.map(item => ({
             bookId: item.bookId,
