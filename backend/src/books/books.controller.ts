@@ -8,9 +8,9 @@ export class BooksController {
 
     constructor(private bookService: BooksService) {}
 
-    @Get('by-title-author')
-    getManyByTitleOrAuthor(@Query('query') title: string) {
-        return this.bookService.getManyByTitleOrAuthor(title);
+    @Get('by-title-author-tag-isbn')
+    getManyByTitleAuthorTagISBN(@Query('query') title: string) {
+        return this.bookService.getManyByTitleAuthorTagISBN(title);
     }
     
     @Get('by-genre')

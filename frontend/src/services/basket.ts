@@ -9,7 +9,7 @@ export function addToBasket(bookId: number, quantity: number) {
 }
 
 export function setBasketItemQuantity(bookId: number, newQuantity: number) {
-    return api.patch(`/basket/${bookId}`, newQuantity);
+    return api.patch(`/basket/${bookId}`, { newQuantity });
 }
 
 export function removeBasketItem(bookId: number) {

@@ -38,16 +38,38 @@ export class BooksService {
         return this.booksRepository.findOneBy({ id });
     }
 
-    async getManyByTitleOrAuthor(query: string) {
+    async getManyByTitleAuthorTagISBN(query: string) {
         const books = await this.getAllBooks();
+        const resultMap = new Map<number, any>();
+
+        // Considerar queries ISBN que contienen dígitos y guiones
+        const isPossibleIsbn = /^[\d-]+$/.test(query);
+
+        // Si la query parece un ISBN (dígitos y guiones), incluir coincidencias por subcadena
+        // Normalizamos quitando guiones para comparar correctamente.
+        if (isPossibleIsbn) {
+            const normalized = query.replace(/-/g, '');
+            const substringMatches = books.filter(book =>
+                ((book.isbn || '').replace(/-/g, '')).includes(normalized)
+            );
+            substringMatches.forEach((b) => resultMap.set(b.id, b));
+        }
+
+        // Si la query es numérica, evitar usar el campo `isbn` en la búsqueda fuzzy
+        // para que no empareje otros ISBNs por subcadenas numéricas similares.
+        const fuzzyKeys = isPossibleIsbn ? ['title', 'author', 'genre'] : ['title', 'author', 'genre', 'isbn'];
 
         const fuse = new Fuse(books, {
-            keys: ['title', 'author'],
+            keys: fuzzyKeys,
             includeScore: true
-        })
+        });
 
-        const result = fuse.search(query);
-        return result;
+        const fuzzyResults = fuse.search(query);
+        fuzzyResults.forEach(({ item }) => {
+            resultMap.set(item.id, item);
+        });
+
+        return Array.from(resultMap.values());
     }
 
     async getManyByGenre(query: string) {
@@ -59,7 +81,7 @@ export class BooksService {
         })
 
         const result = fuse.search(query);
-        return result;
+        return result.map(({ item }) => item);
     }
 
 }

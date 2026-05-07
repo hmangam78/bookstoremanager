@@ -1,12 +1,24 @@
-import { IsNumber, IsPositive, Min, IsOptional } from "class-validator";
+import {
+    IsArray,
+    IsNumber,
+    IsOptional,
+    IsPositive,
+    IsString,
+    Min,
+    ArrayNotEmpty,
+} from "class-validator";
 
 export class CreateBookDTO {
+    @IsString()
     title: string;
 
+    @IsString()
     author: string;
 
+    @IsString()
     description: string;
 
+    @IsString()
     isbn: string;
 
     @IsNumber()
@@ -17,23 +29,39 @@ export class CreateBookDTO {
     @Min(0, { message: 'stock cannot be negative '})
     stock: number;
 
+    @IsString()
     format: string;
 
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
     genre: string[];
+
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
 }
 
 export class UpdateBookDTO {
     @IsOptional()
+    @IsString()
     title?: string;
     
     @IsOptional()
+    @IsString()
     author?: string;
 
     @IsOptional()
+    @IsString()
     description?: string;
 
     @IsOptional()
+    @IsString()
     isbn?: string;
+
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
     
     @IsOptional()
     @IsNumber()
@@ -44,8 +72,13 @@ export class UpdateBookDTO {
     @IsNumber()
     @Min(0, { message: 'stock cannot be negative '})
     stock?: number;
+
+    @IsOptional()
+    @IsString()
     format?: string;
 
     @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
     genre?: string[];
 }

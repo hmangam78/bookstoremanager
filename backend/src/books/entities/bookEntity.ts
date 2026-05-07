@@ -14,7 +14,16 @@ export class Book {
     @Column()
     isbn: string;
     
-    @Column()
+    @Column({
+        type: 'numeric',
+        precision: 10,
+        scale: 2,
+        nullable: true,
+        transformer: {
+            to: (value: number) => value,
+            from: (value: string | null) => (value === null ? 0 : parseFloat(value)),
+        },
+    })
     price: number;
     
     @Column({ type: 'int', default: 0 })
@@ -28,5 +37,8 @@ export class Book {
 
     @Column({ type: 'text', array: true, default: [] })
     genre: string[];
+
+    @Column({ nullable: true, type: 'varchar' })
+    imageUrl?: string;
 
 }
