@@ -21,9 +21,13 @@ export function getSalesByPeriod(desde: string, hasta: string) {
 }
 
 export function getSalesByBook(bookId: number, desde: string, hasta: string) {
+  if (desde && hasta) {
   return api.get<Sale[]>(`/sales/book/${bookId}/sales`, {
     params: { from: desde, to: hasta },
   });
+}
+  // Sin fechas: obtiene todo el histórico del libro
+  return api.get<Sale[]>(`/sales/book/${bookId}`);
 }
 
 export function getTodaySales() {

@@ -7,6 +7,31 @@ import { Search, Calendar, BookText, ChevronRight, FileText, Clock } from "lucid
 import { getBooks, type Book } from "../services/books";
 import { getSalesByBook, getTodaySales, type Sale } from "../services/sales";
 
+function formatDateFromISO(isoString: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function formatDateObj(date: Date | null): string {
+  if (!date) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function toISODate(date: Date | null): string {
+  if (!date) return "";
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${year}-${month}-${day}`;
+}
+
 export default function Reports() {
   const [reportType, setReportType] = useState<"period" | "article">("period");
 
@@ -32,22 +57,6 @@ export default function Reports() {
   const [dailySales, setDailySales] = useState<Sale[] | null>(null);
   const [dailyLoading, setDailyLoading] = useState(false);
 
-  const formatDateObj = (date: Date | null): string => {
-    if (!date) return "";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  const toISODate = (date: Date | null): string => {
-    if (!date) return "";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}`;
-  };
-
   const handleSearchPeriod = () => {
     if (!periodDesde || !periodHasta) return;
     console.log("Buscar ventas por período:", { desde: periodDesde, hasta: periodHasta });
@@ -55,7 +64,7 @@ export default function Reports() {
   };
 
   const handleSearchBooks = async () => {
-    if (!articleQuery || !articleDesde || !articleHasta) return;
+    if (!articleQuery) return;
 
     setLoading(true);
     setBookResults(null);
@@ -87,7 +96,9 @@ export default function Reports() {
     setDailySales(null);
 
     try {
-      const { data: salesData } = await getSalesByBook(book.id, toISODate(articleDesde), toISODate(articleHasta));
+      const desde = toISODate(articleDesde);
+      const hasta = toISODate(articleHasta);
+      const { data: salesData } = await getSalesByBook(book.id, desde, hasta);
       setSales(salesData);
     } catch (error) {
       console.error("Error al obtener ventas:", error);
@@ -253,7 +264,7 @@ export default function Reports() {
             /* Reporte por artículo + período */
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
               <h2 className="text-xl font-semibold text-zinc-900 mb-4">
-                Ventas de un artículo en un período
+                Ventas de un artículo
               </h2>
 
               <div className="flex flex-wrap gap-4 mb-6">
@@ -282,7 +293,7 @@ export default function Reports() {
 
                 <div className="flex-1 min-w-[140px]">
                   <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Desde
+                    Desde <span className="text-zinc-400 font-normal">(opcional)</span>
                   </label>
                   <div className="relative">
                     <Calendar
@@ -295,13 +306,14 @@ export default function Reports() {
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
+                      isClearable
                     />
                   </div>
                 </div>
 
                 <div className="flex-1 min-w-[140px]">
                   <label className="block text-sm font-medium text-zinc-700 mb-1">
-                    Hasta
+                    Hasta <span className="text-zinc-400 font-normal">(opcional)</span>
                   </label>
                   <div className="relative">
                     <Calendar
@@ -314,6 +326,7 @@ export default function Reports() {
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
+                      isClearable
                     />
                   </div>
                 </div>
@@ -321,7 +334,7 @@ export default function Reports() {
 
               <button
                 onClick={handleSearchBooks}
-                disabled={!articleQuery || !articleDesde || !articleHasta || loading}
+                disabled={!articleQuery || loading}
                 className="
                   flex items-center gap-2
                   rounded-xl bg-zinc-900 px-6 py-3
@@ -388,7 +401,6 @@ export default function Reports() {
                 </p>
               ) : (
                 <>
-                  {/* Resumen del día */}
                   <div className="flex gap-6 text-sm mb-6">
                     <div>
                       <span className="text-zinc-500">Total transacciones: </span>
@@ -408,7 +420,6 @@ export default function Reports() {
                     </div>
                   </div>
 
-                  {/* Artículos vendidos ordenados por unidades */}
                   <div className="mt-4">
                     <h4 className="text-sm font-semibold text-zinc-700 mb-3">
                       Artículos vendidos (por unidades)
@@ -416,10 +427,12 @@ export default function Reports() {
                     <table className="w-full text-sm text-left text-zinc-700">
                       <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                         <tr>
-                          <th className="px-4 py-3 rounded-l-xl">Artículo</th>
-                          <th className="px-4 py-3">Unidades</th>
-                          <th className="px-4 py-3">Total</th>
-                          <th className="px-4 py-3 rounded-r-xl">Precio Medio</th>
+                          <th className="px-4 py-3 rounded-l-xl">Unidades</th>
+                          <th className="px-4 py-3">Artículo</th>
+                          <th className="px-4 py-3">Autor</th>
+                          <th className="px-4 py-3">ISBN</th>
+                          <th className="px-4 py-3">Precio Medio</th>
+                          <th className="px-4 py-3 rounded-r-xl">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -433,22 +446,26 @@ export default function Reports() {
                               acc.set(sale.book.id, {
                                 id: sale.book.id,
                                 title: sale.book.title,
+                                author: sale.book.author,
+                                isbn: sale.book.isbn,
                                 unidades: sale.quantity,
                                 total: Number(sale.total),
                               });
                             }
                             return acc;
-                          }, new Map<number, { id: number; title: string; unidades: number; total: number }>())
+                          }, new Map<number, { id: number; title: string; author: string; isbn: string; unidades: number; total: number }>())
                         )
                           .sort(([, a], [, b]) => b.unidades - a.unidades)
                           .map(([, item]) => (
                             <tr key={item.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                              <td className="px-4 py-3 font-medium">{item.title}</td>
                               <td className="px-4 py-3">{item.unidades}</td>
-                              <td className="px-4 py-3">{item.total.toFixed(2)} €</td>
+                              <td className="px-4 py-3 font-medium">{item.title}</td>
+                              <td className="px-4 py-3 text-zinc-600">{item.author}</td>
+                              <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.isbn}</td>
                               <td className="px-4 py-3">
                                 {(item.total / item.unidades).toFixed(2)} €
                               </td>
+                              <td className="px-4 py-3">{item.total.toFixed(2)} €</td>
                             </tr>
                           ))}
                       </tbody>
@@ -489,15 +506,31 @@ export default function Reports() {
               </div>
             )}
 
+            {selectedBook && !articleDesde && !articleHasta && (
+              <div className="text-sm text-zinc-500 mb-4">
+                <p>
+                  Artículo:{" "}
+                  <span className="font-medium text-zinc-700">{selectedBook.title}</span>
+                  {" · "}
+                  <span className="text-zinc-500">{selectedBook.author}</span>
+                  {" · ISBN: "}
+                  <span className="text-zinc-500">{selectedBook.isbn}</span>
+                  {" · "}
+                  <span className="text-zinc-400">Todas las ventas</span>
+                </p>
+              </div>
+            )}
+
             {!selectedBook ? (
               <p className="text-zinc-500 text-sm">
-                Realiza una búsqueda para ver los resultados aquí.
+                Busca un libro para ver sus ventas.
               </p>
             ) : salesLoading ? (
               <p className="text-zinc-500 text-sm">Cargando ventas...</p>
             ) : sales.length === 0 ? (
               <p className="text-zinc-500 text-sm">
-                No se encontraron ventas de este artículo en el período seleccionado.
+                No se encontraron ventas de este artículo
+                {articleDesde || articleHasta ? " en el período seleccionado." : "."}
               </p>
             ) : (
               <div className="mt-4 overflow-x-auto">
@@ -519,14 +552,13 @@ export default function Reports() {
                         <td className="px-4 py-3">{sale.quantity}</td>
                         <td className="px-4 py-3">{sale.total} €</td>
                         <td className="px-4 py-3">
-                          {new Date(sale.createdAt).toLocaleDateString()}
+                          {formatDateFromISO(sale.createdAt)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
-                {/* Resumen */}
                 <div className="mt-4 pt-4 border-t border-zinc-200 flex gap-6 text-sm">
                   <div>
                     <span className="text-zinc-500">Total transacciones: </span>
