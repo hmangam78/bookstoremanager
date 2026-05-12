@@ -36,11 +36,29 @@ export class SalesService {
             throw new BadRequestException('Invalid date format');
         }
 
+        // Ensure fromDate is at the start of the day and toDate is at the end of the day
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
         return this.saleRepo
             .createQueryBuilder('sale')
             .leftJoinAndSelect('sale.book', 'book')
             .where('book.id = :bookId', { bookId })
             .andWhere('sale.createdAt BETWEEN :from AND :to', { from: fromDate, to: toDate })
+            .orderBy('sale.createdAt', 'DESC')
+            .getMany();
+    }
+
+    //Today's sales
+    findTodaySales() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        return this.saleRepo
+            .createQueryBuilder('sale')
+            .leftJoinAndSelect('sale.book', 'book')
+            .where('sale.createdAt BETWEEN :from AND :to', { from: today, to: tomorrow })
             .orderBy('sale.createdAt', 'DESC')
             .getMany();
     }

@@ -11,14 +11,19 @@ export class SalesController {
         return this.salesService.findAll();
     }
 
+    @Get('book/:id/sales')
+    findSalesByBook(@Param('id', ParseIntPipe) id: number, @Query('from') from: string, @Query('to') to: string) {
+        return this.salesService.findSalesByBook(id, from, to);
+    }
+
     @Get('book/:id')
     findByBook(@Param('id', ParseIntPipe) id: number) {
         return this.salesService.findByBook(id);
     }
 
-    @Get('book/:id/sales')
-    findSalesByBook(@Param('id', ParseIntPipe) id: number, @Query('from') from: string, @Query('to') to: string) {
-        return this.salesService.findSalesByBook(id, from, to);
+    @Get('today')
+    findTodaySales() {
+        return this.salesService.findTodaySales();
     }
 
     @Post()
