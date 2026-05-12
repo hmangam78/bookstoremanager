@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { SalesService } from './sales.service'; 
 import { CreateSaleDTO } from './dto/create-sales.dto'; 
 
@@ -16,9 +16,13 @@ export class SalesController {
         return this.salesService.findByBook(id);
     }
 
+    @Get('book/:id/sales')
+    findSalesByBook(@Param('id', ParseIntPipe) id: number, @Query('from') from: string, @Query('to') to: string) {
+        return this.salesService.findSalesByBook(id, from, to);
+    }
+
     @Post()
     create(@Body() dto: CreateSaleDTO) {
         return this.salesService.createSale(dto);
     }
-
 }

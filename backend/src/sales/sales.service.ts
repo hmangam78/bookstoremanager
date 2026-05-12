@@ -28,6 +28,23 @@ export class SalesService {
             .getMany();
     }
 
+    //Book sales in period
+    findSalesByBook(bookId: number, from: string, to: string) {
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+            throw new BadRequestException('Invalid date format');
+        }
+
+        return this.saleRepo
+            .createQueryBuilder('sale')
+            .leftJoinAndSelect('sale.book', 'book')
+            .where('book.id = :bookId', { bookId })
+            .andWhere('sale.createdAt BETWEEN :from AND :to', { from: fromDate, to: toDate })
+            .orderBy('sale.createdAt', 'DESC')
+            .getMany();
+    }
+
     //Sale
     async createSale(dto: CreateSaleDTO) {
         const { bookId, quantity, unitPrice } = dto;

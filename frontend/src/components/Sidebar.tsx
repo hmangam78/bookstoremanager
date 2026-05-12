@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Settings2 } from "lucide-react";
+import { LayoutDashboard, Settings, Settings2, ChartBar } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -19,7 +19,12 @@ export function Sidebar() {
     {
       label: "Admin",
       icon: Settings,
-      onClick: () => navigate("/gestion"),
+      onClick: () => navigate("/"),
+    },
+    {
+      label: "Informes",
+      icon: ChartBar,
+      onClick: () => navigate("/informes"),
     },
   ];
   return (
