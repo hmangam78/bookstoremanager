@@ -7,7 +7,10 @@ export class SalesController {
     constructor(private readonly salesService: SalesService) {}
 
     @Get()
-    findAll() {
+    findAll(@Query('from') from: string, @Query('to') to: string) {
+        if (from && to) {
+            return this.salesService.findSalesInPeriod(from, to);
+        }
         return this.salesService.findAll();
     }
 

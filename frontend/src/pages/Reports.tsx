@@ -5,7 +5,7 @@ import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
 import { Search, Calendar, BookText, ChevronRight, FileText, Clock } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
-import { getSalesByBook, getTodaySales, type Sale } from "../services/sales";
+import { getSalesByBook, getTodaySales, getSalesByPeriod, type Sale } from "../services/sales";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -57,10 +57,34 @@ export default function Reports() {
   const [dailySales, setDailySales] = useState<Sale[] | null>(null);
   const [dailyLoading, setDailyLoading] = useState(false);
 
-  const handleSearchPeriod = () => {
+  // Resultados de ventas por período
+  const [periodSales, setPeriodSales] = useState<Sale[] | null>(null);
+  const [periodLoading, setPeriodLoading] = useState(false);
+
+  // Estado para controlar qué reporte se muestra (solo uno a la vez)
+  const [activeReport, setActiveReport] = useState<"none" | "period" | "daily" | "article">("none");
+
+  const handleSearchPeriod = async () => {
     if (!periodDesde || !periodHasta) return;
-    console.log("Buscar ventas por período:", { desde: periodDesde, hasta: periodHasta });
-    alert(`Buscando ventas desde ${formatDateObj(periodDesde)} hasta ${formatDateObj(periodHasta)}...`);
+
+    setPeriodLoading(true);
+    setPeriodSales(null);
+    setDailySales(null);
+    setSelectedBook(null);
+    setSales([]);
+    setActiveReport("period");
+
+    try {
+      const desde = toISODate(periodDesde);
+      const hasta = toISODate(periodHasta);
+      const { data: salesData } = await getSalesByPeriod(desde, hasta);
+      setPeriodSales(salesData);
+    } catch (error) {
+      console.error("Error al obtener ventas por período:", error);
+      alert("Error al obtener ventas. Revisa la consola para más detalles.");
+    } finally {
+      setPeriodLoading(false);
+    }
   };
 
   const handleSearchBooks = async () => {
@@ -71,6 +95,8 @@ export default function Reports() {
     setSelectedBook(null);
     setSales([]);
     setDailySales(null);
+    setPeriodSales(null);
+    setActiveReport("none");
 
     try {
       const { data: books } = await getBooks(articleQuery);
@@ -94,6 +120,8 @@ export default function Reports() {
     setSalesLoading(true);
     setSales([]);
     setDailySales(null);
+    setPeriodSales(null);
+    setActiveReport("article");
 
     try {
       const desde = toISODate(articleDesde);
@@ -111,8 +139,10 @@ export default function Reports() {
   const handleDailySales = async () => {
     setDailyLoading(true);
     setDailySales(null);
+    setPeriodSales(null);
     setSelectedBook(null);
     setSales([]);
+    setActiveReport("daily");
 
     try {
       const { data } = await getTodaySales();
@@ -169,7 +199,15 @@ export default function Reports() {
           {/* Selector de tipo de reporte */}
           <div className="flex gap-4">
             <button
-              onClick={() => setReportType("period")}
+              onClick={() => {
+                setReportType("period");
+                setPeriodSales(null);
+                setDailySales(null);
+                setSales([]);
+                setSelectedBook(null);
+                setBookResults(null);
+                setActiveReport("none");
+              }}
               className={`
                 rounded-xl px-6 py-3 font-medium transition cursor-pointer
                 ${
@@ -182,7 +220,12 @@ export default function Reports() {
               Ventas por Período
             </button>
             <button
-              onClick={() => setReportType("article")}
+              onClick={() => {
+                setReportType("article");
+                setPeriodSales(null);
+                setDailySales(null);
+                setActiveReport("none");
+              }}
               className={`
                 rounded-xl px-6 py-3 font-medium transition cursor-pointer
                 ${
@@ -388,8 +431,103 @@ export default function Reports() {
             </div>
           )}
 
+          {/* Resultados de ventas por período */}
+          {activeReport === "period" && periodSales !== null && (
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
+              <h3 className="text-lg font-semibold text-zinc-900 mb-2">
+                Ventas del Período
+                <span className="text-sm font-normal text-zinc-500 ml-2">
+                  · {formatDateObj(periodDesde)} — {formatDateObj(periodHasta)}
+                </span>
+              </h3>
+
+              {periodSales.length === 0 ? (
+                <p className="text-zinc-500 text-sm">
+                  No hay ventas registradas en este período.
+                </p>
+              ) : periodLoading ? (
+                <p className="text-zinc-500 text-sm">Cargando ventas...</p>
+              ) : (
+                <>
+                  {/* Summary line */}
+                  <div className="flex gap-6 text-sm mb-6">
+                    <div>
+                      <span className="text-zinc-500">Total transacciones: </span>
+                      <span className="font-semibold">{periodSales.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Total unidades vendidas: </span>
+                      <span className="font-semibold">
+                        {periodSales.reduce((sum, s) => sum + s.quantity, 0)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Total ingresos: </span>
+                      <span className="font-semibold">
+                        {periodSales.reduce((sum, s) => sum + Number(s.total), 0).toFixed(2)} €
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Books sorted by units sold descending */}
+                  <div className="mt-4">
+                    <h4 className="text-sm font-semibold text-zinc-700 mb-3">
+                      Artículos vendidos (por unidades)
+                    </h4>
+                    <table className="w-full text-sm text-left text-zinc-700">
+                      <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
+                        <tr>
+                          <th className="px-4 py-3 rounded-l-xl">Unidades</th>
+                          <th className="px-4 py-3">Artículo</th>
+                          <th className="px-4 py-3">Autor</th>
+                          <th className="px-4 py-3">ISBN</th>
+                          <th className="px-4 py-3">Precio Medio</th>
+                          <th className="px-4 py-3 rounded-r-xl">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Array.from(
+                          periodSales.reduce((acc, sale) => {
+                            const existing = acc.get(sale.book.id);
+                            if (existing) {
+                              existing.unidades += sale.quantity;
+                              existing.total += Number(sale.total);
+                            } else {
+                              acc.set(sale.book.id, {
+                                id: sale.book.id,
+                                title: sale.book.title,
+                                author: sale.book.author,
+                                isbn: sale.book.isbn,
+                                unidades: sale.quantity,
+                                total: Number(sale.total),
+                              });
+                            }
+                            return acc;
+                          }, new Map<number, { id: number; title: string; author: string; isbn: string; unidades: number; total: number }>())
+                        )
+                          .sort(([, a], [, b]) => b.unidades - a.unidades)
+                          .map(([, item]) => (
+                            <tr key={item.id} className="border-t border-zinc-100 hover:bg-zinc-50">
+                              <td className="px-4 py-3">{item.unidades}</td>
+                              <td className="px-4 py-3 font-medium">{item.title}</td>
+                              <td className="px-4 py-3 text-zinc-600">{item.author}</td>
+                              <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.isbn}</td>
+                              <td className="px-4 py-3">
+                                {(item.total / item.unidades).toFixed(2)} €
+                              </td>
+                              <td className="px-4 py-3">{item.total.toFixed(2)} €</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Ventas del día */}
-          {dailySales !== null && (
+          {activeReport === "daily" && dailySales !== null && (
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
               <h3 className="text-lg font-semibold text-zinc-900 mb-2">
                 Ventas del Día · {formatDateObj(new Date())}
@@ -477,10 +615,10 @@ export default function Reports() {
           )}
 
           {/* Resultados de ventas de artículo */}
-          {dailySales === null && (
+          {activeReport === "article" && (
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
             <h3 className="text-lg font-semibold text-zinc-900 mb-2">
-              Resultados
+              Ventas del Artículo
               {selectedBook && (
                 <span className="text-sm font-normal text-zinc-500 ml-2">
                   · {selectedBook.title}
@@ -533,33 +671,9 @@ export default function Reports() {
                 {articleDesde || articleHasta ? " en el período seleccionado." : "."}
               </p>
             ) : (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-sm text-left text-zinc-700">
-                  <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
-                    <tr>
-                      <th className="px-4 py-3 rounded-l-xl"># Venta</th>
-                      <th className="px-4 py-3">Artículo</th>
-                      <th className="px-4 py-3">Cantidad</th>
-                      <th className="px-4 py-3">Total</th>
-                      <th className="px-4 py-3 rounded-r-xl">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sales.map((sale) => (
-                      <tr key={sale.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                        <td className="px-4 py-3 font-medium">{sale.id}</td>
-                        <td className="px-4 py-3">{sale.book.title}</td>
-                        <td className="px-4 py-3">{sale.quantity}</td>
-                        <td className="px-4 py-3">{sale.total} €</td>
-                        <td className="px-4 py-3">
-                          {formatDateFromISO(sale.createdAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="mt-4 pt-4 border-t border-zinc-200 flex gap-6 text-sm">
+              <>
+                {/* Summary line */}
+                <div className="flex gap-6 text-sm mb-6">
                   <div>
                     <span className="text-zinc-500">Total transacciones: </span>
                     <span className="font-semibold">{sales.length}</span>
@@ -577,7 +691,36 @@ export default function Reports() {
                     </span>
                   </div>
                 </div>
-              </div>
+
+                {/* Individual sales table */}
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-zinc-700 mb-3">
+                    Transacciones
+                  </h4>
+                  <table className="w-full text-sm text-left text-zinc-700">
+                    <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
+                      <tr>
+                        <th className="px-4 py-3 rounded-l-xl">Unidades</th>
+                        <th className="px-4 py-3">Precio Medio</th>
+                        <th className="px-4 py-3">Total</th>
+                        <th className="px-4 py-3 rounded-r-xl">Fecha</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...sales]
+                        .sort((a, b) => b.quantity - a.quantity)
+                        .map((sale) => (
+                          <tr key={sale.id} className="border-t border-zinc-100 hover:bg-zinc-50">
+                            <td className="px-4 py-3">{sale.quantity}</td>
+                            <td className="px-4 py-3">{Number(sale.unitPrice).toFixed(2)} €</td>
+                            <td className="px-4 py-3">{Number(sale.total).toFixed(2)} €</td>
+                            <td className="px-4 py-3">{formatDateFromISO(sale.createdAt)}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
           )}

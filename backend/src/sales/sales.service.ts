@@ -18,6 +18,25 @@ export class SalesService {
         return this.saleRepo.find({ relations: ['book'], order: { createdAt: 'DESC' } });
     }
 
+    //Sales in a period
+    findSalesInPeriod(from: string, to: string) {
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+            throw new BadRequestException('Invalid date format');
+        }
+
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+
+        return this.saleRepo
+            .createQueryBuilder('sale')
+            .leftJoinAndSelect('sale.book', 'book')
+            .where('sale.createdAt BETWEEN :from AND :to', { from: fromDate, to: toDate })
+            .orderBy('sale.createdAt', 'DESC')
+            .getMany();
+    }
+
     //Book historic
     findByBook(bookId: number) {
         return this.saleRepo
