@@ -1,16 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookForm } from "../components/BookForm";
 import { BooksList } from "../components/BooksList";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Plus, PackageSearch } from "lucide-react";
+import { Plus, PackageSearch, AlertTriangle } from "lucide-react";
 import { StockReceiptModal } from "../components/StockReceiptModal";
+import { getUncatalogued } from "../services/stockReceipt";
 
 export default function GestionPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingBookId, setEditingBookId] = useState<number | undefined>();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showStockReceipt, setShowStockReceipt] = useState(false);
+  const [uncataloguedCount, setUncataloguedCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getUncatalogued()
+      .then(({ data }) => setUncataloguedCount(data.length))
+      .catch(() => setUncataloguedCount(null));
+  }, [refreshTrigger]);
 
   const handleOpenForm = () => {
     setEditingBookId(undefined);
@@ -51,9 +59,34 @@ export default function GestionPage() {
               <p className="mt-2 text-zinc-600">
                 Añade, edita y elimina libros del catálogo
               </p>
+
+
+
+
+
+
+
+
             </div>
 
             <div className="flex items-center gap-3">
+              {uncataloguedCount !== null && uncataloguedCount > 0 && (
+                <button
+                  className="
+                    flex items-center gap-2
+                    rounded-xl
+                    border border-amber-300 bg-amber-50
+                    px-4 py-3
+                    font-medium text-amber-700
+                    transition hover:bg-amber-100
+                    cursor-pointer
+                  "
+                >
+                  <AlertTriangle size={20} />
+                  {uncataloguedCount} sin catalogar
+                </button>
+              )}
+
               <button
                 onClick={() => setShowStockReceipt(true)}
                 className="

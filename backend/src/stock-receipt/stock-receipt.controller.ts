@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, Get } from '@nestjs/common';
 import { StockReceiptService } from './stock-receipt.service';
 import { StockReceiptArrayDTO } from './dto/stockReceipt.dto';
 
@@ -9,5 +9,10 @@ export class StockReceiptController {
     @Post()
     uploadStock(@Body(new ValidationPipe({ transform: true })) stockReceiptArray: StockReceiptArrayDTO){
         return this.stockReceiptService.uploadStock(stockReceiptArray)
+    }
+
+    @Get()
+    getUncatalogued() {
+        return this.stockReceiptService.getUncatalogued();
     }
 }

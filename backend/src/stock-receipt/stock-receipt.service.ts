@@ -52,4 +52,8 @@ export class StockReceiptService {
             await manager.save(uncataloguedItem);
         }
     }
+
+    async getUncatalogued() {
+        return await this.uncataloguedRepository.find();
+    }
 }
