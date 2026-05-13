@@ -3,12 +3,14 @@ import { BookForm } from "../components/BookForm";
 import { BooksList } from "../components/BooksList";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Plus } from "lucide-react";
+import { Plus, PackageSearch } from "lucide-react";
+import { StockReceiptModal } from "../components/StockReceiptModal";
 
 export default function GestionPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingBookId, setEditingBookId] = useState<number | undefined>();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showStockReceipt, setShowStockReceipt] = useState(false);
 
   const handleOpenForm = () => {
     setEditingBookId(undefined);
@@ -51,22 +53,44 @@ export default function GestionPage() {
               </p>
             </div>
 
-            <button
-              onClick={handleOpenForm}
-              className="
-                flex items-center gap-2
-                rounded-xl
-                bg-zinc-900
-                px-4 py-3
-                font-medium
-                text-white
-                transition
-                hover:bg-zinc-800
-              "
-            >
-              <Plus size={20} />
-              Nuevo Libro
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowStockReceipt(true)}
+                className="
+                  flex items-center gap-2
+                  rounded-xl
+                  border border-zinc-300
+                  bg-white
+                  px-4 py-3
+                  font-medium
+                  text-zinc-700
+                  transition
+                  hover:bg-zinc-50
+                  cursor-pointer
+                "
+              >
+                <PackageSearch size={20} />
+                Recepción de Stock
+              </button>
+
+              <button
+                onClick={handleOpenForm}
+                className="
+                  flex items-center gap-2
+                  rounded-xl
+                  bg-zinc-900
+                  px-4 py-3
+                  font-medium
+                  text-white
+                  transition
+                  hover:bg-zinc-800
+                  cursor-pointer
+                "
+              >
+                <Plus size={20} />
+                Nuevo Libro
+              </button>
+            </div>
           </div>
 
           {/* Content */}
@@ -83,8 +107,17 @@ export default function GestionPage() {
               onCancel={handleFormCancel}
             />
           )}
+
+          {/* Stock Receipt Modal */}
+          {showStockReceipt && (
+            <StockReceiptModal onClose={() => {
+              setShowStockReceipt(false);
+              setRefreshTrigger((prev) => prev + 1);
+            }} />
+          )}
         </section>
       </main>
     </div>
   );
 }
+
