@@ -42,3 +42,15 @@ export class Book {
     imageUrl?: string;
 
 }
+
+@Entity()
+export class Uncatalogued {
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column()
+    isbn: string;
+
+    @Column({ type: 'int' })
+    stock: number;
+}
