@@ -58,31 +58,45 @@ export class BooksService {
         const books = await this.getAllBooks();
         const resultMap = new Map<number, any>();
 
-        // Considerar queries ISBN que contienen dígitos y guiones
+        const normalizedQuery = query.toLowerCase();
+
+        // 1. Exact substring matches on title (highest priority)
+        const titleSubstringMatches = books.filter(book =>
+            book.title.toLowerCase().includes(normalizedQuery)
+        );
+        titleSubstringMatches.forEach(b => resultMap.set(b.id, b));
+
+        // 2. Considerar queries ISBN que contienen dígitos y guiones
         const isPossibleIsbn = /^[\d-]+$/.test(query);
 
-        // Si la query parece un ISBN (dígitos y guiones), incluir coincidencias por subcadena
-        // Normalizamos quitando guiones para comparar correctamente.
+        // Si la query parece un ISBN, incluir coincidencias por subcadena en ISBN
         if (isPossibleIsbn) {
             const normalized = query.replace(/-/g, '');
-            const substringMatches = books.filter(book =>
+            const isbnSubstringMatches = books.filter(book =>
                 ((book.isbn || '').replace(/-/g, '')).includes(normalized)
             );
-            substringMatches.forEach((b) => resultMap.set(b.id, b));
+            isbnSubstringMatches.forEach((b) => resultMap.set(b.id, b));
         }
 
+        // 3. Fuzzy search for everything else not already matched
         // Si la query es numérica, evitar usar el campo `isbn` en la búsqueda fuzzy
         // para que no empareje otros ISBNs por subcadenas numéricas similares.
         const fuzzyKeys = isPossibleIsbn ? ['title', 'author', 'genre'] : ['title', 'author', 'genre', 'isbn'];
 
         const fuse = new Fuse(books, {
             keys: fuzzyKeys,
-            includeScore: true
+            includeScore: true,
+            minMatchCharLength: 3,
         });
 
         const fuzzyResults = fuse.search(query);
-        fuzzyResults.forEach(({ item }) => {
-            resultMap.set(item.id, item);
+        fuzzyResults.forEach(({ item, score }) => {
+            if (score !== undefined && score < 0.55) {
+                // No sobreescribir coincidencias exactas (título o ISBN)
+                if (!resultMap.has(item.id)) {
+                    resultMap.set(item.id, item);
+                }
+            }
         });
 
         return Array.from(resultMap.values());

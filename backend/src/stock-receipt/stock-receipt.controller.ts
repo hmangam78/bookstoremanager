@@ -8,7 +8,7 @@ export class StockReceiptController {
 
     @Post()
     uploadStock(@Body(new ValidationPipe({ transform: true })) stockReceiptArray: StockReceiptArrayDTO){
-        return this.stockReceiptService.uploadStock(stockReceiptArray)
+        return this.stockReceiptService.uploadStock(stockReceiptArray);
     }
 
     @Get()
