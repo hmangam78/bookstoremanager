@@ -18,8 +18,8 @@ export class BooksController {
         return this.bookService.getManyByGenre(genre);
     }
 
-    @Get('by-isbn')
-    getOneByISBN(@Query('isbn') isbn: string) {
+    @Get('isbn/:isbn')
+    getOneByISBN(@Param('isbn') isbn: string) {
         return this.bookService.getBookByISBN(isbn);
     }
     

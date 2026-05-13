@@ -1,7 +1,10 @@
 import { api } from "../lib/api";
 
+export const getBookByISBN = (isbn: string) => api.get(`/books/isbn/${isbn}`);
+
 export type StockReceiptItem = {
   isbn: string;
+  title?: string;
   stock: number;
 };
 
@@ -22,3 +25,4 @@ export function uploadStockReceipt(payload: StockReceiptPayload) {
 export function getUncatalogued() {
   return api.get<UncataloguedItem[]>("/stock-receipt");
 }
+

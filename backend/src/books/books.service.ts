@@ -66,10 +66,10 @@ export class BooksService {
         );
         titleSubstringMatches.forEach(b => resultMap.set(b.id, b));
 
-        // 2. Considerar queries ISBN que contienen dígitos y guiones
+        // 2. Consider queries ISBN that contain digits and dashes
         const isPossibleIsbn = /^[\d-]+$/.test(query);
 
-        // Si la query parece un ISBN, incluir coincidencias por subcadena en ISBN
+        // If the query seems an ISBN, include matches by substring
         if (isPossibleIsbn) {
             const normalized = query.replace(/-/g, '');
             const isbnSubstringMatches = books.filter(book =>
@@ -79,8 +79,6 @@ export class BooksService {
         }
 
         // 3. Fuzzy search for everything else not already matched
-        // Si la query es numérica, evitar usar el campo `isbn` en la búsqueda fuzzy
-        // para que no empareje otros ISBNs por subcadenas numéricas similares.
         const fuzzyKeys = isPossibleIsbn ? ['title', 'author', 'genre'] : ['title', 'author', 'genre', 'isbn'];
 
         const fuse = new Fuse(books, {
@@ -92,7 +90,7 @@ export class BooksService {
         const fuzzyResults = fuse.search(query);
         fuzzyResults.forEach(({ item, score }) => {
             if (score !== undefined && score < 0.55) {
-                // No sobreescribir coincidencias exactas (título o ISBN)
+                // Doesn't overwrite matches
                 if (!resultMap.has(item.id)) {
                     resultMap.set(item.id, item);
                 }

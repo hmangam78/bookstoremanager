@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Plus, Trash2, PackageSearch, AlertTriangle } from "lucide-react";
-import { uploadStockReceipt, type StockReceiptItem } from "../services/stockReceipt";
+import { uploadStockReceipt, type StockReceiptItem, getBookByISBN } from "../services/stockReceipt";
 
 type Props = {
   onClose: () => void;
@@ -13,21 +13,32 @@ export function StockReceiptModal({ onClose }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [showReview, setShowReview] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-
+  
   const addLine = () => {
     const isbn = currentIsbn.trim();
     const stock = parseInt(currentStock, 10);
-
+    
     if (!isbn) return;
     if (isNaN(stock) || stock <= 0) return;
-
+    
     // Check for duplicate ISBN
     if (items.some((item) => item.isbn === isbn)) {
       alert("El ISBN ya está en la lista.");
       return;
     }
-
-    setItems([...items, { isbn, stock }]);
+    
+    // Fetch title if book exists in database
+    const doAdd = async () => {
+      try {
+        const book = await getBookByISBN(isbn);
+        const title = book?.data?.title || '(No catalogado)';
+        setItems(prev => [...prev, { isbn, title, stock }]);
+      } catch {
+        setItems(prev => [...prev, { isbn, title: '(No catalogado)', stock }]);
+      }
+    };
+    doAdd();
+    
     setCurrentIsbn("");
     setCurrentStock("");
   };
@@ -53,7 +64,9 @@ export function StockReceiptModal({ onClose }: Props) {
     setResult(null);
 
     try {
-      const { data } = await uploadStockReceipt({ items });
+      const { data } = await uploadStockReceipt({
+        items: items.map(({ isbn, stock }) => ({ isbn, stock }))
+      });
       setResult({
         success: true,
         message: `Recepción de stock completada con éxito. ${items.length} líneas procesadas.`,
@@ -137,6 +150,7 @@ export function StockReceiptModal({ onClose }: Props) {
                 <tr>
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">ISBN</th>
+                  <th className="px-4 py-3">Título</th>
                   <th className="px-4 py-3">Stock</th>
                 </tr>
               </thead>
@@ -145,6 +159,7 @@ export function StockReceiptModal({ onClose }: Props) {
                   <tr key={i} className="border-t border-zinc-100">
                     <td className="px-4 py-3 text-zinc-400">{i + 1}</td>
                     <td className="px-4 py-3 font-mono text-xs font-medium">{item.isbn}</td>
+                    <td className="px-4 py-3 text-sm">{item.title}</td>
                     <td className="px-4 py-3">{item.stock}</td>
                   </tr>
                 ))}
@@ -254,6 +269,7 @@ export function StockReceiptModal({ onClose }: Props) {
                 <tr>
                   <th className="px-4 py-3">#</th>
                   <th className="px-4 py-3">ISBN</th>
+                  <th className="px-4 py-3">Título</th>
                   <th className="px-4 py-3">Stock</th>
                   <th className="px-4 py-3 w-16"></th>
                 </tr>
@@ -263,6 +279,7 @@ export function StockReceiptModal({ onClose }: Props) {
                   <tr key={i} className="border-t border-zinc-100">
                     <td className="px-4 py-3 text-zinc-400">{i + 1}</td>
                     <td className="px-4 py-3 font-mono text-xs font-medium">{item.isbn}</td>
+                    <td className="px-4 py-3 font-mono text-xs font-medium">{item.title}</td>
                     <td className="px-4 py-3">{item.stock}</td>
                     <td className="px-4 py-3">
                       <button
