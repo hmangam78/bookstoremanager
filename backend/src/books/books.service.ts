@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Book } from './entities/bookEntity';
+import { Repository, DataSource } from 'typeorm';
+import { Book, Uncatalogued } from './entities/bookEntity';
 import { CreateBookDTO, UpdateBookDTO } from './dto/book.dto';
 import Fuse from 'fuse.js';
 
@@ -11,14 +11,30 @@ export class BooksService {
     constructor(
         @InjectRepository(Book)
         private readonly booksRepository: Repository<Book>,
+        @InjectRepository(Uncatalogued)
+        private readonly uncataloguedRepository: Repository<Uncatalogued>,
+        private readonly dataSource: DataSource,
     ) {}
 
     getAllBooks() {
         return this.booksRepository.find();
     }
 
-    createBook(data: CreateBookDTO) {
-        return this.booksRepository.save(data);
+    async createBook(data: CreateBookDTO) {
+        return await this.dataSource.transaction(async manager => {
+            // Delete uncatalogued entry if exists
+            const uncataloguedItem = await manager.getRepository(Uncatalogued).findOne({ 
+                where: { isbn: data.isbn },
+                lock: { mode: 'pessimistic_write' },
+            });
+
+            if (uncataloguedItem) {
+                await manager.delete(Uncatalogued, uncataloguedItem.id);
+            }
+
+            const book = manager.getRepository(Book).create(data);
+            return manager.save(book);
+        });
     }
 
     deleteBook(id: number) {

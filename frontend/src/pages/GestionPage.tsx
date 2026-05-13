@@ -5,7 +5,9 @@ import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
 import { Plus, PackageSearch, AlertTriangle } from "lucide-react";
 import { StockReceiptModal } from "../components/StockReceiptModal";
-import { getUncatalogued } from "../services/stockReceipt";
+import { UncataloguedListModal } from "../components/UncataloguedListModal";
+import { getUncatalogued, type UncataloguedItem } from "../services/stockReceipt";
+import type { CreateBookInput } from "../services/books";
 
 export default function GestionPage() {
   const [showForm, setShowForm] = useState(false);
@@ -13,6 +15,8 @@ export default function GestionPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showStockReceipt, setShowStockReceipt] = useState(false);
   const [uncataloguedCount, setUncataloguedCount] = useState<number | null>(null);
+  const [showUncataloguedList, setShowUncataloguedList] = useState(false);
+  const [bookFormPrefill, setBookFormPrefill] = useState<Partial<CreateBookInput> | undefined>(undefined);
 
   useEffect(() => {
     getUncatalogued()
@@ -23,22 +27,32 @@ export default function GestionPage() {
   const handleOpenForm = () => {
     setEditingBookId(undefined);
     setShowForm(true);
+    setBookFormPrefill(undefined);
   };
 
   const handleEditBook = (bookId: number) => {
     setEditingBookId(bookId);
     setShowForm(true);
+    setBookFormPrefill(undefined);
   };
 
   const handleFormSave = () => {
     setShowForm(false);
     setEditingBookId(undefined);
+    setBookFormPrefill(undefined);
     setRefreshTrigger((prev) => prev + 1);
   };
 
   const handleFormCancel = () => {
     setShowForm(false);
     setEditingBookId(undefined);
+    setBookFormPrefill(undefined);
+  };
+
+  const handleSelectUncatalogued = (item: UncataloguedItem) => {
+    setShowUncataloguedList(false);
+    setBookFormPrefill({ isbn: item.isbn, stock: item.stock });
+    setShowForm(true);
   };
 
   return (
@@ -59,19 +73,12 @@ export default function GestionPage() {
               <p className="mt-2 text-zinc-600">
                 Añade, edita y elimina libros del catálogo
               </p>
-
-
-
-
-
-
-
-
             </div>
 
             <div className="flex items-center gap-3">
               {uncataloguedCount !== null && uncataloguedCount > 0 && (
                 <button
+                  onClick={() => setShowUncataloguedList(true)}
                   className="
                     flex items-center gap-2
                     rounded-xl
@@ -136,6 +143,7 @@ export default function GestionPage() {
           {showForm && (
             <BookForm
               bookId={editingBookId}
+              initialData={bookFormPrefill}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             />
@@ -147,6 +155,14 @@ export default function GestionPage() {
               setShowStockReceipt(false);
               setRefreshTrigger((prev) => prev + 1);
             }} />
+          )}
+
+          {/* Uncatalogued List Modal */}
+          {showUncataloguedList && (
+            <UncataloguedListModal
+              onSelect={handleSelectUncatalogued}
+              onClose={() => setShowUncataloguedList(false)}
+            />
           )}
         </section>
       </main>

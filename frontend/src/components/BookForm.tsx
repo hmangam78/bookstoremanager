@@ -7,6 +7,7 @@ type BookFormProps = {
   bookId?: number;
   onSave: () => void;
   onCancel: () => void;
+  initialData?: Partial<CreateBookInput>;
 };
 
 const genreOptions = [
@@ -70,17 +71,17 @@ const genreOptions = [
 ];
 const formatOptions = ["Tapa Dura", "Tapa Blanda", "Bolsillo"];
 
-export function BookForm({ bookId, onSave, onCancel }: BookFormProps) {
+export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProps) {
   const [formData, setFormData] = useState<CreateBookInput>({
-    title: "",
-    author: "",
-    description: "",
-    isbn: "",
-    price: 0,
-    stock: 0,
-    format: "",
-    genre: [],
-    imageUrl: "",
+    title: initialData?.title || "",
+    author: initialData?.author || "",
+    description: initialData?.description || "",
+    isbn: initialData?.isbn || "",
+    price: initialData?.price ?? 0,
+    stock: initialData?.stock ?? 0,
+    format: initialData?.format || "",
+    genre: initialData?.genre || [],
+    imageUrl: initialData?.imageUrl || "",
   });
 
   const [loading, setLoading] = useState(false);
