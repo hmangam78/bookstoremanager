@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Body, Post } from '@nestjs/common';
+import { Controller, Get, Param, Body, Post, ParseIntPipe } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { NewTicketDTO } from './dto/ticket.dto';
 
@@ -10,6 +10,12 @@ export class TicketController {
     getAll() {
         return this.ticketService.getAll();
     }
+
+    @Get('sale/:saleId')
+    getTicketBySaleId(@Param('saleId', ParseIntPipe) saleId: number) {
+        return this.ticketService.getTicketBySaleId(saleId);
+    }
+
 
     @Get(':ticketNo')
     getOneByTicketNumber(@Param('ticketNo') ticketNo: string){

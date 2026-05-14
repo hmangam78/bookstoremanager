@@ -28,3 +28,7 @@ export type Ticket = {
 export function getTicketByNumber(ticketNo: string) {
   return api.get<Ticket>(`/ticket/${ticketNo}`);
 }
+
+export function getTicketBySaleId(saleId: number) {
+  return api.get<Ticket>(`/ticket/sale/${saleId}`);
+}

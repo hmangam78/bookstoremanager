@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
 import { NewTicketDTO } from './dto/ticket.dto';
+import { TicketItem } from './entities/ticket-item.entity';
 
 @Injectable()
 export class TicketService {
@@ -23,6 +24,15 @@ export class TicketService {
             where: { ticketNo },
             relations: ['items', 'items.book'],
         });
+    }
+
+    async getTicketBySaleId(saleId: number) {
+        const ticketItem = await this.dataSource.getRepository(TicketItem).findOne({
+            where: { saleId },
+            relations: ['ticket', 'ticket.items', 'ticket.items.book'],
+        });
+
+        return ticketItem?.ticket || null;
     }
 
     async createTicket(ticketData: NewTicketDTO) {

@@ -6,7 +6,7 @@ import { Hero } from "../components/Hero";
 import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Tag } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
 import { getSalesByBook, getTodaySales, getSalesByPeriod, type Sale } from "../services/sales";
-import { getTicketByNumber, type Ticket } from "../services/tickets";
+import { getTicketByNumber, getTicketBySaleId, type Ticket } from "../services/tickets";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -53,6 +53,8 @@ export default function Reports() {
   // Resultados de ventas
   const [sales, setSales] = useState<Sale[]>([]);
   const [salesLoading, setSalesLoading] = useState(false);
+  // Mapa de saleId -> ticketNo
+  const [saleTicketMap, setSaleTicketMap] = useState<Record<number, string>>({});
 
   // Ventas del día
   const [dailySales, setDailySales] = useState<Sale[] | null>(null);
@@ -79,6 +81,7 @@ export default function Reports() {
     setDailySales(null);
     setSelectedBook(null);
     setSales([]);
+    setSaleTicketMap({});
     setActiveReport("period");
 
     try {
@@ -101,6 +104,7 @@ export default function Reports() {
     setBookResults(null);
     setSelectedBook(null);
     setSales([]);
+    setSaleTicketMap({});
     setDailySales(null);
     setPeriodSales(null);
     setActiveReport("none");
@@ -126,6 +130,7 @@ export default function Reports() {
     setSelectedBook(book);
     setSalesLoading(true);
     setSales([]);
+    setSaleTicketMap({});
     setDailySales(null);
     setPeriodSales(null);
     setActiveReport("article");
@@ -135,6 +140,22 @@ export default function Reports() {
       const hasta = toISODate(articleHasta);
       const { data: salesData } = await getSalesByBook(book.id, desde, hasta);
       setSales(salesData);
+
+      // Fetch ticket numbers for all sales
+      const ticketMap: Record<number, string> = {};
+      await Promise.all(
+        salesData.map(async (sale) => {
+          try {
+            const { data: ticket } = await getTicketBySaleId(sale.id);
+            if (ticket) {
+              ticketMap[sale.id] = ticket.ticketNo;
+            }
+          } catch {
+            // sale might not have a ticket
+          }
+        })
+      );
+      setSaleTicketMap(ticketMap);
     } catch (error) {
       console.error("Error al obtener ventas:", error);
       alert("Error al obtener ventas. Revisa la consola para más detalles.");
@@ -149,6 +170,7 @@ export default function Reports() {
     setPeriodSales(null);
     setSelectedBook(null);
     setSales([]);
+    setSaleTicketMap({});
     setActiveReport("daily");
 
     try {
@@ -173,6 +195,7 @@ export default function Reports() {
     setDailySales(null);
     setSelectedBook(null);
     setSales([]);
+    setSaleTicketMap({});
     setActiveReport("none");
 
     try {
@@ -342,6 +365,7 @@ export default function Reports() {
                 setPeriodSales(null);
                 setDailySales(null);
                 setSales([]);
+                setSaleTicketMap({});
                 setSelectedBook(null);
                 setBookResults(null);
                 setActiveReport("none");
@@ -838,7 +862,7 @@ export default function Reports() {
                   <table className="w-full text-sm text-left text-zinc-700">
                   <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                     <tr>
-                      <th className="px-4 py-3 rounded-l-xl">ID Venta</th>
+                      <th className="px-4 py-3 rounded-l-xl">Nº Ticket</th>
                       <th className="px-4 py-3">Unidades</th>
                       <th className="px-4 py-3">Precio Unitario</th>
                       <th className="px-4 py-3">Total</th>
@@ -850,7 +874,9 @@ export default function Reports() {
                       .sort((a, b) => b.quantity - a.quantity)
                       .map((sale) => (
                         <tr key={sale.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                          <td className="px-4 py-3 font-mono text-xs text-zinc-500">#{sale.id}</td>
+                          <td className="px-4 py-3 font-mono text-xs text-zinc-500">
+                            {saleTicketMap[sale.id] || "—"}
+                          </td>
                           <td className="px-4 py-3">{sale.quantity}</td>
                           <td className="px-4 py-3">{Number(sale.unitPrice).toFixed(2)} €</td>
                           <td className="px-4 py-3">{Number(sale.total).toFixed(2)} €</td>
