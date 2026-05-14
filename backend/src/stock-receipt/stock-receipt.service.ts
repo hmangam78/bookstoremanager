@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm';
 import { Book, Uncatalogued } from 'src/books/entities/bookEntity';
-import { StockReceiptArrayDTO, StockReceiptDTO } from './dto/stockReceipt.dto';
+import { StockReceiptDTO, StockReceiptOrderDTO } from './dto/stockReceipt.dto';
+import { StockReceiptOrder } from './entities/stockReceiptOrder.entity';
+import { StockReceiptOrderItem} from './entities/stockReceiptOrderItem.entity';
 
 @Injectable()
 export class StockReceiptService {
@@ -15,9 +17,37 @@ export class StockReceiptService {
         private readonly dataSource: DataSource,
     ) {}
 
-    async uploadStock(stockReceiptArray: StockReceiptArrayDTO) {
+    async uploadStock(stockReceiptOrder: StockReceiptOrderDTO) {
         return await this.dataSource.transaction(async manager => {
-            for (const element of stockReceiptArray.items) {
+
+            // Create the StockReceiptOrder
+            const order = manager.getRepository(StockReceiptOrder).create({
+                orderNo: stockReceiptOrder.orderNo,
+            });
+            let savedOrder: StockReceiptOrder;
+            try {
+                savedOrder = await manager.save(order);
+            } catch (error: unknown) {
+                if ((error as { code?: string })?.code === '23505') {
+                    throw new ConflictException(
+                        `El número de pedido "${stockReceiptOrder.orderNo}" ya ha sido capturado.`
+                    );
+                }
+                throw error;
+            }
+
+            // Create StockReceiptOrderItems for each line
+            const orderItems = stockReceiptOrder.items.map(item =>
+                manager.getRepository(StockReceiptOrderItem).create({
+                    orderId: savedOrder.id,
+                    isbn: item.isbn,
+                    stock: item.stock,
+                })
+            );
+            await manager.save(orderItems);
+
+            // Process stock
+            for (const element of stockReceiptOrder.items) {
                 // Search by ISBN
                 const dataBaseItem = await manager.getRepository(Book).findOne({
                     where: { isbn: element.isbn },
@@ -32,6 +62,7 @@ export class StockReceiptService {
                     await this.manageUncatalogued(element, manager);
                 }
             }
+            return savedOrder;
         });
     }
 

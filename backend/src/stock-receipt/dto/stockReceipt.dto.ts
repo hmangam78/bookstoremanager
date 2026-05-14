@@ -16,3 +16,13 @@ export class StockReceiptArrayDTO {
     @Type(() => StockReceiptDTO)
     items: StockReceiptDTO[];
 }
+
+export class StockReceiptOrderDTO {
+    @IsString()
+    orderNo: string;
+
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => StockReceiptDTO)
+    items: StockReceiptDTO[];
+}

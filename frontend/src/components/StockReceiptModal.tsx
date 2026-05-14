@@ -8,6 +8,7 @@ type Props = {
 
 export function StockReceiptModal({ onClose }: Props) {
   const [items, setItems] = useState<StockReceiptItem[]>([]);
+  const [orderNo, setOrderNo] = useState("");
   const [currentIsbn, setCurrentIsbn] = useState("");
   const [currentStock, setCurrentStock] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -65,11 +66,12 @@ export function StockReceiptModal({ onClose }: Props) {
 
     try {
       const { data } = await uploadStockReceipt({
+        orderNo,
         items: items.map(({ isbn, stock }) => ({ isbn, stock }))
       });
       setResult({
         success: true,
-        message: `Recepción de stock completada con éxito. ${items.length} líneas procesadas.`,
+        message: `Recepción de stock completada con éxito. Pedido "${orderNo}" — ${items.length} líneas procesadas.`,
       });
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
@@ -141,7 +143,7 @@ export function StockReceiptModal({ onClose }: Props) {
           </div>
 
           <p className="text-sm text-zinc-500 mb-4">
-            Se van a procesar <strong>{items.length}</strong> líneas. Revisa los datos antes de confirmar.
+            Pedido: <strong>{orderNo}</strong> — se van a procesar <strong>{items.length}</strong> líneas. Revisa los datos antes de confirmar.
           </p>
 
           <div className="max-h-60 overflow-y-auto rounded-xl border border-zinc-200">
@@ -201,11 +203,11 @@ export function StockReceiptModal({ onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-zinc-900">Recepción de Stock</h3>
             <p className="text-sm text-zinc-500 mt-1">
-              Añade los productos recibidos línea por línea
+              Introduce el número de pedido y añade los productos recibidos
             </p>
           </div>
           <button
@@ -214,6 +216,21 @@ export function StockReceiptModal({ onClose }: Props) {
           >
             <X size={20} />
           </button>
+        </div>
+
+        {/* Order number */}
+        <div className="mb-4">
+          <label className="block text-xs font-medium text-zinc-600 mb-1">Nº de Pedido *</label>
+          <input
+            type="text"
+            value={orderNo}
+            onChange={(e) => setOrderNo(e.target.value)}
+            placeholder="ALB-20250413-001"
+            className="
+              w-full rounded-xl border border-zinc-200 bg-zinc-50
+              px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400
+            "
+          />
         </div>
 
         {/* Input line */}
@@ -316,7 +333,7 @@ export function StockReceiptModal({ onClose }: Props) {
           </button>
           <button
             onClick={handleReview}
-            disabled={items.length === 0}
+            disabled={items.length === 0 || !orderNo.trim()}
             className="
               flex items-center gap-2 rounded-xl bg-zinc-900 px-6 py-3
               font-medium text-white transition hover:bg-zinc-800

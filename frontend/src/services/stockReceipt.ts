@@ -9,6 +9,7 @@ export type StockReceiptItem = {
 };
 
 export type StockReceiptPayload = {
+  orderNo: string;
   items: StockReceiptItem[];
 };
 

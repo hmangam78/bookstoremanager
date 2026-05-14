@@ -1,14 +1,14 @@
 import { Controller, Post, Body, ValidationPipe, Get, Param } from '@nestjs/common';
 import { StockReceiptService } from './stock-receipt.service';
-import { StockReceiptArrayDTO } from './dto/stockReceipt.dto';
+import { StockReceiptOrderDTO } from './dto/stockReceipt.dto';
 
 @Controller('stock-receipt')
 export class StockReceiptController {
     constructor(private stockReceiptService: StockReceiptService) {}
 
     @Post()
-    uploadStock(@Body(new ValidationPipe({ transform: true })) stockReceiptArray: StockReceiptArrayDTO){
-        return this.stockReceiptService.uploadStock(stockReceiptArray);
+    uploadStock(@Body(new ValidationPipe({ transform: true })) stockReceiptOrder: StockReceiptOrderDTO){
+        return this.stockReceiptService.uploadStock(stockReceiptOrder);
     }
 
     @Get()
@@ -20,4 +20,5 @@ export class StockReceiptController {
     getUncataloguedByISBN(@Param('isbn') isbn: string) {
         return this.stockReceiptService.getUncataloguedByISBN(isbn);
     }
+
 }
