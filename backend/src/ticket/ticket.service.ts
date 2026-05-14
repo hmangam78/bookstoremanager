@@ -15,11 +15,14 @@ export class TicketService {
     ) {}
 
     async getAll() {
-        return await this.ticketRepository.find();
+        return await this.ticketRepository.find({ relations: ['items', 'items.book'] });
     }
 
     async getOneByTicketNumber(ticketNo: string) {
-        return await this.ticketRepository.findOneBy({ ticketNo });
+        return await this.ticketRepository.findOne({
+            where: { ticketNo },
+            relations: ['items', 'items.book'],
+        });
     }
 
     async createTicket(ticketData: NewTicketDTO) {

@@ -10,6 +10,8 @@ export class NewTicketDTO {
     @IsNumber()
     @IsPositive()
     totalAmount: number;
+
+    ticketNo: string;
 }
 
 export class TicketItemDTO {
@@ -28,4 +30,8 @@ export class TicketItemDTO {
     @IsNumber()
     @IsPositive()
     saleId: number;
+
+    @IsNumber()
+    @IsPositive()
+    total: number;
 }

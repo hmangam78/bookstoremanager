@@ -1,6 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { BooksService } from 'src/books/books.service';
 import { SalesService } from 'src/sales/sales.service';
+import { Sale } from 'src/sales/entities/sale.entity';
+import { TicketService } from 'src/ticket/ticket.service';
+import { NewTicketDTO } from 'src/ticket/dto/ticket.dto';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 
 export interface BasketItem {
     bookId: number;
@@ -11,6 +15,12 @@ export interface BasketItem {
     totalPrice: number;
 }
 
+export interface CheckoutResult {
+    sales: Sale[];
+    totalAmount: number;
+    ticket: Ticket;
+}
+
 @Injectable()
 export class BasketService {
     private basket: BasketItem[] = [];
@@ -18,6 +28,7 @@ export class BasketService {
     constructor(
         private readonly booksService: BooksService,
         private readonly salesService: SalesService,
+        private readonly ticketService: TicketService
     ) {}
 
     getBasket() {
@@ -82,7 +93,7 @@ export class BasketService {
         return item;
     }
 
-    async checkoutBasket() {
+    async checkoutBasket(): Promise<CheckoutResult> {
         if (!this.basket.length) throw new BadRequestException('Basket is empty');
 
         const items = this.basket.map(item => ({
@@ -91,9 +102,25 @@ export class BasketService {
             unitPrice: item.unitPrice,
         }));
 
+        const totalAmount = this.basket.reduce((sum, item) => sum + item.totalPrice, 0);
+
         const sales = await this.salesService.createBulkSale(items);
-        
+
+        const ticketData: NewTicketDTO = {
+            totalAmount,
+            ticketNo: 'pending',
+            items: sales.map(sale => ({
+                bookId: sale.book.id,
+                quantity: sale.quantity,
+                unitPrice: Number(sale.unitPrice),
+                saleId: sale.id,
+                total: Number(sale.unitPrice) * sale.quantity,
+            })),
+        };
+
+        const ticket = await this.ticketService.createTicket(ticketData);
+
         this.basket.length = 0;
-        return sales;
+        return { sales, totalAmount, ticket };
     }
 }
