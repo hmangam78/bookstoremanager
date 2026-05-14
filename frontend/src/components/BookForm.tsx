@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import type { CreateBookInput } from "../services/books";
 import { createBook, updateBook, getBookById, deleteBook } from "../services/books";
-import { X, ChevronDown, Trash2 } from "lucide-react";
+import { getUncataloguedByISBN } from "../services/stockReceipt";
+import { X, ChevronDown, Trash2, Info } from "lucide-react";
 
 type BookFormProps = {
   bookId?: number;
@@ -93,7 +94,30 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
   const [genreSearch, setGenreSearch] = useState("");
   const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [uncataloguedInfo, setUncataloguedInfo] = useState<{ isbn: string; stock: number } | null>(null);
   const genreDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Detect if the ISBN belongs to an uncatalogued item and autocomplete stock
+  useEffect(() => {
+    const isbn = formData.isbn.trim();
+    if (!isbn || isEditing) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await getUncataloguedByISBN(isbn);
+        if (res.data) {
+          setUncataloguedInfo({ isbn: res.data.isbn, stock: res.data.stock });
+          setFormData(prev => ({ ...prev, stock: res.data.stock }));
+        } else {
+          setUncataloguedInfo(null);
+        }
+      } catch {
+        setUncataloguedInfo(null);
+      }
+    }, 400); // debounce 400ms
+
+    return () => clearTimeout(timer);
+  }, [formData.isbn, isEditing]);
 
   useEffect(() => {
     if (bookId) {
@@ -231,6 +255,16 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-3 flex-shrink-0">
             <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {uncataloguedInfo && (
+          <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2 flex-shrink-0">
+            <Info size={18} className="text-amber-600 mt-0.5 shrink-0" />
+            <div className="text-sm text-amber-800">
+              Este ISBN existe en la tabla de <strong>no catalogados</strong> con stock <strong>{uncataloguedInfo.stock}</strong>.
+              El campo stock se ha autocompletado. Al crear el libro, la entrada en no catalogados se eliminará automáticamente.
+            </div>
           </div>
         )}
 

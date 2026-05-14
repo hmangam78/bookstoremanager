@@ -56,4 +56,8 @@ export class StockReceiptService {
     async getUncatalogued() {
         return await this.uncataloguedRepository.find();
     }
+
+    async getUncataloguedByISBN(isbn: string) {
+        return await this.uncataloguedRepository.findOneBy({ isbn });
+    }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, Get } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, Get, Param } from '@nestjs/common';
 import { StockReceiptService } from './stock-receipt.service';
 import { StockReceiptArrayDTO } from './dto/stockReceipt.dto';
 
@@ -14,5 +14,10 @@ export class StockReceiptController {
     @Get()
     getUncatalogued() {
         return this.stockReceiptService.getUncatalogued();
+    }
+
+    @Get('isbn/:isbn')
+    getUncataloguedByISBN(@Param('isbn') isbn: string) {
+        return this.stockReceiptService.getUncataloguedByISBN(isbn);
     }
 }

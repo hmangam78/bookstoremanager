@@ -26,3 +26,7 @@ export function getUncatalogued() {
   return api.get<UncataloguedItem[]>("/stock-receipt");
 }
 
+export function getUncataloguedByISBN(isbn: string) {
+  return api.get<UncataloguedItem | null>(`/stock-receipt/isbn/${isbn}`);
+}
+
