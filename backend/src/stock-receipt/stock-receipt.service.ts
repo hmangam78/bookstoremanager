@@ -12,6 +12,7 @@ export class StockReceiptService {
     constructor(
         @InjectRepository(Book)
         private readonly booksRepository: Repository<Book>,
+        
         @InjectRepository(Uncatalogued)
         private readonly uncataloguedRepository: Repository<Uncatalogued>,
         private readonly dataSource: DataSource,

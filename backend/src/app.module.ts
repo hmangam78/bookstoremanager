@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SalesModule } from './sales/sales.module';
 import { BasketModule } from './basket/basket.module';
 import { StockReceiptModule } from './stock-receipt/stock-receipt.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { StockReceiptModule } from './stock-receipt/stock-receipt.module';
     }),
     BasketModule,
     StockReceiptModule,
+    TicketModule,
   ],
   controllers: [],
   providers: [],

@@ -92,7 +92,7 @@ export class BasketService {
         }));
 
         const sales = await this.salesService.createBulkSale(items);
-
+        
         this.basket.length = 0;
         return sales;
     }

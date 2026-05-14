@@ -826,26 +826,28 @@ export default function Reports() {
                     Transacciones
                   </h4>
                   <table className="w-full text-sm text-left text-zinc-700">
-                    <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
-                      <tr>
-                        <th className="px-4 py-3 rounded-l-xl">Unidades</th>
-                        <th className="px-4 py-3">Precio Medio</th>
-                        <th className="px-4 py-3">Total</th>
-                        <th className="px-4 py-3 rounded-r-xl">Fecha</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...sales]
-                        .sort((a, b) => b.quantity - a.quantity)
-                        .map((sale) => (
-                          <tr key={sale.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                            <td className="px-4 py-3">{sale.quantity}</td>
-                            <td className="px-4 py-3">{Number(sale.unitPrice).toFixed(2)} €</td>
-                            <td className="px-4 py-3">{Number(sale.total).toFixed(2)} €</td>
-                            <td className="px-4 py-3">{formatDateFromISO(sale.createdAt)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
+                  <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
+                    <tr>
+                      <th className="px-4 py-3 rounded-l-xl">ID Venta</th>
+                      <th className="px-4 py-3">Unidades</th>
+                      <th className="px-4 py-3">Precio Unitario</th>
+                      <th className="px-4 py-3">Total</th>
+                      <th className="px-4 py-3 rounded-r-xl">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...sales]
+                      .sort((a, b) => b.quantity - a.quantity)
+                      .map((sale) => (
+                        <tr key={sale.id} className="border-t border-zinc-100 hover:bg-zinc-50">
+                          <td className="px-4 py-3 font-mono text-xs text-zinc-500">#{sale.id}</td>
+                          <td className="px-4 py-3">{sale.quantity}</td>
+                          <td className="px-4 py-3">{Number(sale.unitPrice).toFixed(2)} €</td>
+                          <td className="px-4 py-3">{Number(sale.total).toFixed(2)} €</td>
+                          <td className="px-4 py-3">{formatDateFromISO(sale.createdAt)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
                   </table>
                 </div>
               </>
