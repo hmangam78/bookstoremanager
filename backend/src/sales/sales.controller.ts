@@ -29,6 +29,11 @@ export class SalesController {
         return this.salesService.findTodaySales();
     }
 
+    @Get(':saleId')
+    findSaleBySaleId(@Param('saleId', ParseIntPipe) saleId: number) {
+        return this.salesService.findSalesBySaleId(saleId);
+    }
+
     @Post()
     create(@Body() dto: CreateSaleDTO) {
         return this.salesService.createSale(dto);

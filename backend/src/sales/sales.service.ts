@@ -18,6 +18,13 @@ export class SalesService {
         return this.saleRepo.find({ relations: ['book'], order: { createdAt: 'DESC' } });
     }
 
+    findSalesBySaleId(saleId: number) {
+        return this.saleRepo.findOne({
+            where: { id: saleId },
+            relations: ['book'],
+        });
+    }
+
     //Sales in a period
     findSalesInPeriod(from: string, to: string) {
         const fromDate = new Date(from);

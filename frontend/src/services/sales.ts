@@ -34,3 +34,7 @@ export function getTodaySales() {
   return api.get<Sale[]>("/sales/today");
 }
 
+export function getSaleById(saleId: number) {
+  return api.get<Sale>(`/sales/${saleId}`);
+}
+

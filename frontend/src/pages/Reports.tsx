@@ -3,9 +3,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Search, Calendar, BookText, ChevronRight, FileText, Clock } from "lucide-react";
+import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Receipt } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
-import { getSalesByBook, getTodaySales, getSalesByPeriod, type Sale } from "../services/sales";
+import { getSalesByBook, getTodaySales, getSalesByPeriod, getSaleById, type Sale } from "../services/sales";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -63,6 +63,12 @@ export default function Reports() {
 
   // Estado para controlar qué reporte se muestra (solo uno a la vez)
   const [activeReport, setActiveReport] = useState<"none" | "period" | "daily" | "article">("none");
+
+  // Estado para búsqueda por saleId
+  const [saleIdInput, setSaleIdInput] = useState("");
+  const [saleByIdResult, setSaleByIdResult] = useState<Sale | null>(null);
+  const [saleByIdLoading, setSaleByIdLoading] = useState(false);
+  const [saleByIdError, setSaleByIdError] = useState("");
 
   const handleSearchPeriod = async () => {
     if (!periodDesde || !periodHasta) return;
@@ -155,6 +161,34 @@ export default function Reports() {
     }
   };
 
+  const handleSearchSaleById = async () => {
+    const id = parseInt(saleIdInput, 10);
+    if (isNaN(id) || id <= 0) return;
+
+    setSaleByIdLoading(true);
+    setSaleByIdResult(null);
+    setSaleByIdError("");
+    setPeriodSales(null);
+    setDailySales(null);
+    setSelectedBook(null);
+    setSales([]);
+    setActiveReport("none");
+
+    try {
+      const { data } = await getSaleById(id);
+      if (!data) {
+        setSaleByIdError(`No se encontró ninguna venta con el ID ${id}.`);
+      } else {
+        setSaleByIdResult(data);
+      }
+    } catch (error) {
+      console.error("Error al obtener venta por ID:", error);
+      setSaleByIdError(`Error al buscar la venta. Verifica que el ID existe.`);
+    } finally {
+      setSaleByIdLoading(false);
+    }
+  };
+
   const datePickerClass = `
     w-full rounded-xl border border-zinc-200
     bg-zinc-50 pl-10 pr-4 py-3 text-sm
@@ -194,6 +228,100 @@ export default function Reports() {
               <Clock size={20} />
               {dailyLoading ? "Cargando..." : "Ventas del Día"}
             </button>
+          </div>
+
+          {/* Buscador por ID de venta */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
+              Buscar Venta por ID
+            </h2>
+
+            <div className="flex gap-4 items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  ID de la venta
+                </label>
+                <div className="relative">
+                  <Receipt
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                  />
+                  <input
+                    type="number"
+                    value={saleIdInput}
+                    onChange={(e) => setSaleIdInput(e.target.value)}
+                    placeholder="Ej: 42"
+                    min="1"
+                    className="
+                      w-full rounded-xl border border-zinc-200
+                      bg-zinc-50 pl-10 pr-4 py-3 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-zinc-400
+                    "
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleSearchSaleById}
+                disabled={!saleIdInput.trim() || saleByIdLoading}
+                className="
+                  flex items-center gap-2
+                  rounded-xl bg-zinc-900 px-6 py-3
+                  font-medium text-white
+                  transition hover:bg-zinc-800
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  cursor-pointer
+                "
+              >
+                <Search size={20} />
+                {saleByIdLoading ? "Buscando..." : "Buscar"}
+              </button>
+            </div>
+
+            {/* Resultado de búsqueda por ID */}
+            {saleByIdError && (
+              <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3">
+                <p className="text-sm text-red-700">{saleByIdError}</p>
+              </div>
+            )}
+
+            {saleByIdResult && (
+              <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200 mt-6">
+                <h3 className="text-lg font-semibold text-zinc-900 mb-4">
+                  Venta #{saleByIdResult.id}
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div>
+                    <span className="text-sm text-zinc-500">Artículo</span>
+                    <p className="font-medium text-zinc-900">{saleByIdResult.book?.title || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">Autor</span>
+                    <p className="font-medium text-zinc-900">{saleByIdResult.book?.author || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">ISBN</span>
+                    <p className="font-mono text-sm text-zinc-700">{saleByIdResult.book?.isbn || "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">Fecha</span>
+                    <p className="font-medium text-zinc-900">{formatDateFromISO(saleByIdResult.createdAt)}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">Unidades</span>
+                    <p className="font-medium text-zinc-900">{saleByIdResult.quantity}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">Precio Unitario</span>
+                    <p className="font-medium text-zinc-900">{Number(saleByIdResult.unitPrice).toFixed(2)} €</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-sm text-zinc-500">Total</span>
+                    <p className="text-xl font-bold text-zinc-900">{Number(saleByIdResult.total).toFixed(2)} €</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Selector de tipo de reporte */}
