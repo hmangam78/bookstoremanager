@@ -3,8 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, DataSource } from "typeorm";
 import { Sale } from "./entities/sale.entity";
 import { Book } from "src/books/entities/bookEntity";
-import { CreateSaleDTO } from "./dto/create-sales.dto";
-import { StockMovement } from "src/stock-receipt/entities/stock-movement.entity";
 
 @Injectable()
 export class SalesService {
@@ -122,24 +120,10 @@ export class SalesService {
                     total: Number((price * quantity).toFixed(2)),
                 });
 
-                // Record the stock movement
-                await this.recordMovement(manager, book.isbn, -quantity, `Sale`);
-                
                 sales.push(await manager.save(sale));
             }
 
             return sales;
         })
-    }
-
-    private async recordMovement(manager, isbn, quantity, type, reference?) {
-        const repo = manager.getRepository(StockMovement);
-        const newMovement = repo.create( {
-            isbn,
-            quantity,
-            type,
-            reference,
-        });
-        await repo.save(newMovement);
     }
 }

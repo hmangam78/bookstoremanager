@@ -5,6 +5,8 @@ import { Sale } from 'src/sales/entities/sale.entity';
 import { TicketService } from 'src/ticket/ticket.service';
 import { NewTicketDTO } from 'src/ticket/dto/ticket.dto';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { StockMovement } from 'src/stock-receipt/entities/stock-movement.entity';
+import { DataSource } from 'typeorm';
 
 export interface BasketItem {
     bookId: number;
@@ -28,7 +30,8 @@ export class BasketService {
     constructor(
         private readonly booksService: BooksService,
         private readonly salesService: SalesService,
-        private readonly ticketService: TicketService
+        private readonly ticketService: TicketService,
+        private readonly dataSource: DataSource,
     ) {}
 
     getBasket() {
@@ -120,7 +123,33 @@ export class BasketService {
 
         const ticket = await this.ticketService.createTicket(ticketData);
 
+        // Record stock movement
+        await this.dataSource.transaction(async manager => {
+            for (const sale of sales) {
+                const book = sale.book;
+                const movementRepo = manager.getRepository(StockMovement);
+                const movement = movementRepo.create({
+                    isbn: book.isbn,
+                    quantity: -sale.quantity,
+                    type: 'Sale',
+                    reference: ticket.ticketNo,
+                });
+                await movementRepo.save(movement);
+            }
+        })
+
         this.basket.length = 0;
         return { sales, totalAmount, ticket };
+    }
+    
+    private async recordMovement(manager, isbn, quantity, type, reference?) {
+        const repo = manager.getRepository(StockMovement);
+        const newMovement = repo.create( {
+            isbn,
+            quantity,
+            type,
+            reference,
+        });
+        await repo.save(newMovement);
     }
 }
