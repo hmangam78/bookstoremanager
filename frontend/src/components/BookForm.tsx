@@ -43,6 +43,7 @@ const genreOptions = [
   "Juvenil",
   "Literatura",
   "Manga",
+  "Manualidades",
   "Medicina",
   "Misterio",
   "Mitología",
@@ -53,9 +54,11 @@ const genreOptions = [
   "Novela",
   "Novela Negra",
   "Novela Romántica",
+  "Ocio",
   "Poesía",
   "Policíaca",
   "Política",
+  "Práctico",
   "Programación",
   "Psicología",
   "Realismo Mágico",
@@ -82,7 +85,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
     description: initialData?.description || "",
     isbn: initialData?.isbn || "",
     price: initialData?.price ?? 0,
-    stock: initialData?.stock ?? 0,
+    stock: 0,
     format: initialData?.format || "",
     genre: initialData?.genre || [],
     imageUrl: initialData?.imageUrl || "",
@@ -181,15 +184,9 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
       return;
     }
 
-    if (!Number.isFinite(formData.stock) || formData.stock < 0) {
-      setError("El stock debe ser un número válido");
-      setLoading(false);
-      return;
-    }
-
     try {
       if (bookId) {
-        const { format, imageUrl, ...updateData } = formData;
+        const { stock, format, imageUrl, ...updateData } = formData;
         const dataToSend = imageUrl ? { ...updateData, imageUrl } : updateData;
         await updateBook(bookId, dataToSend);
       } else {
@@ -263,7 +260,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
             <Info size={18} className="text-amber-600 mt-0.5 shrink-0" />
             <div className="text-sm text-amber-800">
               Este ISBN existe en la tabla de <strong>no catalogados</strong> con stock <strong>{uncataloguedInfo.stock}</strong>.
-              El campo stock se ha autocompletado. Al crear el libro, la entrada en no catalogados se eliminará automáticamente.
+              El stock se ha autocompletado. Al crear el libro, la entrada en no catalogados se eliminará automáticamente.
             </div>
           </div>
         )}
@@ -341,20 +338,6 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
                 inputMode="decimal"
                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
                 placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Stock *</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                required
-                min="0"
-                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                placeholder="0"
               />
             </div>
           </div>
@@ -474,7 +457,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
 
           <div className="flex gap-3 justify-between pt-4 border-t flex-shrink-0">
             <div>
-              {isEditing && !loading && formData.title && formData.stock === 0 && (
+              {isEditing && !loading && formData.title && (
                 <button
                   type="button"
                   onClick={handleDelete}

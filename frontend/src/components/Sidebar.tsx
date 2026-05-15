@@ -17,14 +17,14 @@ export function Sidebar() {
       onClick: () => navigate("/gestion"),
     },
     {
-      label: "Admin",
-      icon: Settings,
-      onClick: () => navigate("/admin"),
-    },
-    {
       label: "Informes",
       icon: ChartBar,
       onClick: () => navigate("/informes"),
+    },
+    {
+      label: "Admin",
+      icon: Settings,
+      onClick: () => navigate("/admin"),
     },
   ];
   return (
