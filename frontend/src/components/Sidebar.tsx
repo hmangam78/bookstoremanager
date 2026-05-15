@@ -19,7 +19,7 @@ export function Sidebar() {
     {
       label: "Admin",
       icon: Settings,
-      onClick: () => navigate("/"),
+      onClick: () => navigate("/admin"),
     },
     {
       label: "Informes",

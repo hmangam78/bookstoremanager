@@ -3,12 +3,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Tag, RotateCcw, Activity } from "lucide-react";
+import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Tag, RotateCcw } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
 import { getSalesByBook, getTodaySales, getSalesByPeriod, type Sale } from "../services/sales";
 import { getTicketByNumber, getTicketBySaleId, type Ticket } from "../services/tickets";
 import { ReturnModal } from "../components/ReturnModal";
-import { getMovementsByISBN, type StockMovement } from "../services/stockReceipt";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -77,15 +76,6 @@ export default function Reports() {
 
   // Estado para devoluciones
   const [showReturnModal, setShowReturnModal] = useState(false);
-
-  // Estado para movimientos de stock
-  const [movementQuery, setMovementQuery] = useState("");
-  const [movementDesde, setMovementDesde] = useState<Date | null>(null);
-  const [movementHasta, setMovementHasta] = useState<Date | null>(null);
-  const [movements, setMovements] = useState<StockMovement[] | null>(null);
-  const [movementBook, setMovementBook] = useState<Book | null>(null);
-  const [movementLoading, setMovementLoading] = useState(false);
-  const [movementError, setMovementError] = useState("");
 
   const handleSearchPeriod = async () => {
     if (!periodDesde || !periodHasta) return;
@@ -224,55 +214,6 @@ export default function Reports() {
       setTicketError(`Error al buscar el ticket. Verifica que el número existe.`);
     } finally {
       setTicketLoading(false);
-    }
-  };
-
-  const handleSearchMovements = async () => {
-    const query = movementQuery.trim();
-    if (!query) return;
-
-    setMovementLoading(true);
-    setMovements(null);
-    setMovementBook(null);
-    setMovementError("");
-
-    try {
-      // First search books to find the ISBN
-      const { data: books } = await getBooks(query);
-      if (books.length === 0) {
-        setMovementError("No se encontró ningún libro con ese criterio.");
-        return;
-      }
-
-      const book = books[0];
-      setMovementBook(book);
-      setMovementError("");
-
-      // Get movements for that ISBN
-      const { data: movementsData } = await getMovementsByISBN(book.isbn);
-
-      // Filter by date range if specified
-      let filtered = movementsData;
-      if (movementDesde) {
-        const fromDate = new Date(movementDesde);
-        fromDate.setHours(0, 0, 0, 0);
-        filtered = filtered.filter(m => new Date(m.createdAt) >= fromDate);
-      }
-      if (movementHasta) {
-        const toDate = new Date(movementHasta);
-        toDate.setHours(23, 59, 59, 999);
-        filtered = filtered.filter(m => new Date(m.createdAt) <= toDate);
-      }
-
-      // Sort from oldest to newest
-      filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
-      setMovements(filtered);
-    } catch (error) {
-      console.error("Error al obtener movimientos:", error);
-      setMovementError("Error al buscar movimientos.");
-    } finally {
-      setMovementLoading(false);
     }
   };
 
@@ -996,186 +937,7 @@ export default function Reports() {
           </div>
           )}
 
-          {/* Movimientos de Stock */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
-            <h2 className="text-xl font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-              <Activity size={22} className="text-zinc-500" />
-              Movimientos de Stock
-            </h2>
 
-            <div className="flex flex-wrap gap-4 mb-6">
-              <div className="flex-[2] min-w-[200px]">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  ISBN, Título o Autor
-                </label>
-                <div className="relative">
-                  <BookText
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-                  />
-                  <input
-                    type="text"
-                    value={movementQuery}
-                    onChange={(e) => setMovementQuery(e.target.value)}
-                    placeholder="Ej: 978-84... / El Quijote"
-                    className="
-                      w-full rounded-xl border border-zinc-200
-                      bg-zinc-50 pl-10 pr-4 py-3 text-sm
-                      focus:outline-none focus:ring-2 focus:ring-zinc-400
-                    "
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-[140px]">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Desde <span className="text-zinc-400 font-normal">(opcional)</span>
-                </label>
-                <div className="relative">
-                  <Calendar
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 z-10"
-                  />
-                  <DatePicker
-                    selected={movementDesde}
-                    onChange={(date) => setMovementDesde(date)}
-                    dateFormat="dd-MM-yyyy"
-                    placeholderText="DD-MM-YYYY"
-                    className={datePickerClass}
-                    isClearable
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-[140px]">
-                <label className="block text-sm font-medium text-zinc-700 mb-1">
-                  Hasta <span className="text-zinc-400 font-normal">(opcional)</span>
-                </label>
-                <div className="relative">
-                  <Calendar
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 z-10"
-                  />
-                  <DatePicker
-                    selected={movementHasta}
-                    onChange={(date) => setMovementHasta(date)}
-                    dateFormat="dd-MM-yyyy"
-                    placeholderText="DD-MM-YYYY"
-                    className={datePickerClass}
-                    isClearable
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={handleSearchMovements}
-                  disabled={!movementQuery.trim() || movementLoading}
-                  className="
-                    flex items-center gap-2
-                    rounded-xl bg-zinc-900 px-6 py-3
-                    font-medium text-white
-                    transition hover:bg-zinc-800
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    cursor-pointer
-                  "
-                >
-                  <Search size={20} />
-                  {movementLoading ? "Buscando..." : "Buscar"}
-                </button>
-              </div>
-            </div>
-
-            {/* Error */}
-            {movementError && (
-              <div className="rounded-lg bg-red-50 border border-red-200 p-3 mb-4">
-                <p className="text-sm text-red-700">{movementError}</p>
-              </div>
-            )}
-
-            {/* No movements found */}
-            {movements !== null && movements.length === 0 && (
-              <p className="text-zinc-500 text-sm">No se encontraron movimientos para este artículo.</p>
-            )}
-
-            {/* Results */}
-            {movements !== null && movements.length > 0 && movementBook && (
-              <>
-                {/* Summary card */}
-                <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-5 mb-6">
-                  <h3 className="text-base font-semibold text-zinc-900 mb-3">{movementBook.title}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                    <div>
-                      <span className="text-zinc-500">Autor</span>
-                      <p className="font-medium text-zinc-900">{movementBook.author}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">ISBN</span>
-                      <p className="font-mono text-sm text-zinc-700">{movementBook.isbn}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">Stock Actual</span>
-                      <p className="font-semibold text-zinc-900">{movementBook.stock}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">Primer Movimiento</span>
-                      <p className="font-medium text-zinc-900">{formatDateFromISO(movements[0].createdAt)}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-500">Último Movimiento</span>
-                      <p className="font-medium text-zinc-900">{formatDateFromISO(movements[movements.length - 1].createdAt)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Movements table */}
-                <div className="overflow-hidden rounded-xl border border-zinc-200">
-                  <table className="w-full text-sm text-left text-zinc-700">
-                    <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
-                      <tr>
-                        <th className="px-4 py-3 rounded-l-xl">Fecha</th>
-                        <th className="px-4 py-3">Tipo</th>
-                        <th className="px-4 py-3">Cantidad</th>
-                        <th className="px-4 py-3 rounded-r-xl">Referencia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {movements.map((mov) => (
-                        <tr key={mov.id} className="border-t border-zinc-100 hover:bg-zinc-50">
-                          <td className="px-4 py-3 whitespace-nowrap">{formatDateFromISO(mov.createdAt)}</td>
-                          <td className="px-4 py-3">
-                            {mov.type === 'stock captured' ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                Entrada
-                              </span>
-                            ) : mov.type === 'sale' || mov.type === 'Sale' ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                                Venta
-                              </span>
-                            ) : mov.type === 'return' ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
-                                Devolución
-                              </span>
-                            ) : (
-                              <span className="text-zinc-500">{mov.type}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={mov.quantity > 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                              {mov.quantity > 0 ? `+${mov.quantity}` : mov.quantity}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-zinc-500 font-mono text-xs">
-                            {mov.reference || "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </div>
         </section>
       </main>
     </div>
