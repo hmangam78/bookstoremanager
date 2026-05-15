@@ -55,6 +55,12 @@ export class InventoryAdjustmentService {
         });
     }
 
+    async adjustBatch(itemDataArray: AdjustStockDTO[]) {
+        for (const item of itemDataArray) {
+            await this.adjustOne(item);
+        }
+    }
+
     private async recordMovement(manager: EntityManager, isbn: string, quantity: number, type: string, reference?: string) {
         const repo = manager.getRepository(StockMovement);
         const newMovement = repo.create( {
@@ -82,3 +88,4 @@ export class InventoryAdjustmentService {
         return result & BigInt('0x7FFFFFFFFFFFFFFF');
     }
 }
+

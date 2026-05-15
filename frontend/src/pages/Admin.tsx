@@ -3,9 +3,10 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Search, Calendar, BookText, Activity, Package, Archive } from "lucide-react";
+import { Search, Calendar, BookText, Activity, Package, Archive, ListPlus, RotateCcw, Trash2 } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
 import { getMovementsByISBN, type StockMovement, getUncatalogued, type UncataloguedItem } from "../services/stockReceipt";
+import { api } from "../lib/api";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -30,6 +31,16 @@ export default function Admin() {
   const [uncataloguedItems, setUncataloguedItems] = useState<UncataloguedItem[] | null>(null);
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [inventoryLoaded, setInventoryLoaded] = useState(false);
+
+  // Stock adjustment state
+  const [adjustQuery, setAdjustQuery] = useState("");
+  const [adjustSearchResult, setAdjustSearchResult] = useState<Book | null>(null);
+  const [actualStock, setActualStock] = useState("");
+  const [adjustItems, setAdjustItems] = useState<Array<{ isbn: string; title: string; theoreticalStock: number; actualStock: number }>>([]);
+  const [adjustSearchLoading, setAdjustSearchLoading] = useState(false);
+  const [adjustSearchError, setAdjustSearchError] = useState("");
+  const [adjustConfirming, setAdjustConfirming] = useState(false);
+  const [adjustSuccess, setAdjustSuccess] = useState(false);
 
   const handleLoadInventory = async () => {
     setInventoryLoading(true);
@@ -96,6 +107,90 @@ export default function Admin() {
       setMovementError("Error al buscar movimientos.");
     } finally {
       setMovementLoading(false);
+    }
+  };
+
+  const handleSearchForAdjust = async () => {
+    const query = adjustQuery.trim();
+    if (!query) return;
+
+    setAdjustSearchLoading(true);
+    setAdjustSearchResult(null);
+    setActualStock("");
+    setAdjustSearchError("");
+
+    try {
+      const { data: books } = await getBooks(query);
+      if (books.length === 0) {
+        setAdjustSearchError("No se encontró ningún libro con ese criterio.");
+        return;
+      }
+
+      const book = books[0];
+      setAdjustSearchResult(book);
+    } catch (error) {
+      console.error("Error al buscar libro:", error);
+      setAdjustSearchError("Error al buscar el libro.");
+    } finally {
+      setAdjustSearchLoading(false);
+    }
+  };
+
+  const handleAddToAdjustList = () => {
+    if (!adjustSearchResult) return;
+
+    const parsedActualStock = parseInt(actualStock, 10);
+    if (isNaN(parsedActualStock) || parsedActualStock < 0) {
+      setAdjustSearchError("El stock real debe ser un número entero no negativo.");
+      return;
+    }
+
+    if (adjustItems.some(item => item.isbn === adjustSearchResult.isbn)) {
+      setAdjustSearchError("Este ISBN ya está en la lista de ajuste.");
+      return;
+    }
+
+    setAdjustItems(prev => [
+      ...prev,
+      {
+        isbn: adjustSearchResult.isbn,
+        title: adjustSearchResult.title,
+        theoreticalStock: adjustSearchResult.stock,
+        actualStock: parsedActualStock,
+      },
+    ]);
+
+    setAdjustQuery("");
+    setAdjustSearchResult(null);
+    setActualStock("");
+    setAdjustSearchError("");
+  };
+
+  const handleRemoveAdjustItem = (isbn: string) => {
+    setAdjustItems(prev => prev.filter(item => item.isbn !== isbn));
+  };
+
+  const handleConfirmAdjustments = async () => {
+    if (adjustItems.length === 0) return;
+
+    setAdjustConfirming(true);
+    setAdjustSuccess(false);
+
+    try {
+      const payload = adjustItems.map(item => ({
+        isbn: item.isbn,
+        quantity: item.actualStock - item.theoreticalStock,
+      }));
+
+      await api.post("/inventory-adjustment/adjustStock", payload);
+
+      setAdjustSuccess(true);
+      setAdjustItems([]);
+    } catch (error) {
+      console.error("Error al confirmar ajustes:", error);
+      alert("Error al realizar los ajustes de stock.");
+    } finally {
+      setAdjustConfirming(false);
     }
   };
 
@@ -284,6 +379,10 @@ export default function Admin() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                                 Devolución
                               </span>
+                            ) : mov.type === 'Inventory adjustment' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                Ajuste
+                              </span>
                             ) : (
                               <span className="text-zinc-500">{mov.type}</span>
                             )}
@@ -302,6 +401,191 @@ export default function Admin() {
                   </table>
                 </div>
               </>
+            )}
+          </div>
+
+          {/* Ajuste de Stock */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200">
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+              <RotateCcw size={22} className="text-zinc-500" />
+              Ajuste de Stock
+            </h2>
+
+            <div className="flex flex-wrap gap-4 mb-4">
+              <div className="flex-[2] min-w-[200px]">
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  ISBN, Título o Autor
+                </label>
+                <div className="relative">
+                  <BookText
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                  />
+                  <input
+                    type="text"
+                    value={adjustQuery}
+                    onChange={(e) => setAdjustQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchForAdjust(); }}
+                    placeholder="Ej: 978-84... / El Quijote"
+                    className="
+                      w-full rounded-xl border border-zinc-200
+                      bg-zinc-50 pl-10 pr-4 py-3 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-zinc-400
+                    "
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-end">
+                <button
+                  onClick={handleSearchForAdjust}
+                  disabled={!adjustQuery.trim() || adjustSearchLoading}
+                  className="
+                    flex items-center gap-2
+                    rounded-xl bg-zinc-900 px-6 py-3
+                    font-medium text-white
+                    transition hover:bg-zinc-800
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    cursor-pointer
+                  "
+                >
+                  <Search size={20} />
+                  {adjustSearchLoading ? "Buscando..." : "Buscar"}
+                </button>
+              </div>
+            </div>
+
+            {/* Search error */}
+            {adjustSearchError && (
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 mb-4">
+                <p className="text-sm text-red-700">{adjustSearchError}</p>
+              </div>
+            )}
+
+            {/* Search result */}
+            {adjustSearchResult && (
+              <div className="rounded-xl bg-zinc-50 border border-zinc-200 p-4 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm items-end">
+                  <div>
+                    <span className="text-zinc-500 text-xs">ISBN</span>
+                    <p className="font-mono text-sm text-zinc-700">{adjustSearchResult.isbn}</p>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 text-xs">Título</span>
+                    <p className="font-medium text-zinc-900">{adjustSearchResult.title}</p>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 text-xs">Stock Teórico (BD)</span>
+                    <p className="font-semibold text-zinc-900">{adjustSearchResult.stock}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
+                      Stock Real
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={actualStock}
+                      onChange={(e) => setActualStock(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleAddToAdjustList(); }}
+                      placeholder="Ej: 25"
+                      className="
+                        w-full rounded-lg border border-zinc-300
+                        bg-white px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-zinc-400
+                      "
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleAddToAdjustList}
+                    disabled={!actualStock.trim()}
+                    className="
+                      flex items-center gap-2
+                      rounded-xl bg-zinc-800 px-5 py-2.5
+                      text-sm font-medium text-white
+                      transition hover:bg-zinc-700
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      cursor-pointer
+                    "
+                  >
+                    <ListPlus size={18} />
+                    Añadir a la lista
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Adjustments list */}
+            {adjustItems.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-zinc-700 mb-2">
+                  Elementos a ajustar ({adjustItems.length})
+                </h3>
+                <div className="overflow-hidden rounded-xl border border-zinc-200">
+                  <table className="w-full text-sm text-left text-zinc-700">
+                    <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
+                      <tr>
+                        <th className="px-4 py-3">ISBN</th>
+                        <th className="px-4 py-3">Título</th>
+                        <th className="px-4 py-3">Stock Teórico</th>
+                        <th className="px-4 py-3">Stock Real</th>
+                        <th className="px-4 py-3">Diferencia</th>
+                        <th className="px-4 py-3 rounded-r-xl"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adjustItems.map((item) => (
+                        <tr key={item.isbn} className="border-t border-zinc-100 hover:bg-zinc-50">
+                          <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.isbn}</td>
+                          <td className="px-4 py-3 font-medium">{item.title}</td>
+                          <td className="px-4 py-3">{item.theoreticalStock}</td>
+                          <td className="px-4 py-3 font-semibold">{item.actualStock}</td>
+                          <td className="px-4 py-3">
+                            <span className={`font-semibold ${item.actualStock - item.theoreticalStock > 0 ? 'text-green-600' : item.actualStock - item.theoreticalStock < 0 ? 'text-red-600' : 'text-zinc-500'}`}>
+                              {item.actualStock - item.theoreticalStock > 0 ? `+${item.actualStock - item.theoreticalStock}` : item.actualStock - item.theoreticalStock}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => handleRemoveAdjustItem(item.isbn)}
+                              className="text-zinc-400 hover:text-red-600 transition cursor-pointer"
+                              title="Eliminar"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleConfirmAdjustments}
+                    disabled={adjustConfirming}
+                    className="
+                      flex items-center gap-2
+                      rounded-xl bg-zinc-900 px-6 py-3
+                      font-medium text-white
+                      transition hover:bg-zinc-800
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      cursor-pointer
+                    "
+                  >
+                    <RotateCcw size={20} />
+                    {adjustConfirming ? "Ajustando..." : "Confirmar Ajustes"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {adjustSuccess && (
+              <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                <p className="text-sm text-green-700">Ajustes de stock realizados correctamente.</p>
+              </div>
             )}
           </div>
 

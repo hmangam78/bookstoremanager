@@ -12,4 +12,9 @@ export class InventoryAdjustmentController {
     adjustOne(@Body(new ValidationPipe({ transform: true })) itemData: AdjustStockDTO) {
         return this.inventoryAdjustmentService.adjustOne(itemData);
     }
+
+    @Post('/adjustStock')
+    adjustBatch(@Body(new ValidationPipe({ transform: true})) itemDataArray: AdjustStockDTO[]) {
+        return this.inventoryAdjustmentService.adjustBatch(itemDataArray);
+    }
 }
