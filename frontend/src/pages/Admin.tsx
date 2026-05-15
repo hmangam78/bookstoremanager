@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Search, Calendar, BookText, Activity, Package, Archive, ListPlus, RotateCcw, Trash2 } from "lucide-react";
+import { Search, Calendar, BookText, Activity, Package, Archive, ListPlus, RotateCcw, Trash2, LogOut, Lock } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
 import { getMovementsByISBN, type StockMovement, getUncatalogued, type UncataloguedItem } from "../services/stockReceipt";
 import { api } from "../lib/api";
+import { LoginModal } from "../components/LoginModal";
+import { checkSession, logout, isAuthenticated, isAdmin } from "../services/auth";
+import { useNavigate } from "react-router-dom";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -18,6 +21,7 @@ function formatDateFromISO(isoString: string): string {
 }
 
 export default function Admin() {
+  const navigate = useNavigate();
   const [movementQuery, setMovementQuery] = useState("");
   const [movementDesde, setMovementDesde] = useState<Date | null>(null);
   const [movementHasta, setMovementHasta] = useState<Date | null>(null);
@@ -41,6 +45,32 @@ export default function Admin() {
   const [adjustSearchError, setAdjustSearchError] = useState("");
   const [adjustConfirming, setAdjustConfirming] = useState(false);
   const [adjustSuccess, setAdjustSuccess] = useState(false);
+
+  // Auth state
+  const [showLogin, setShowLogin] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated() && isAdmin()) {
+      setAuthorized(true);
+    } else {
+      setShowLogin(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = (level: string) => {
+    setAuthorized(true);
+    setShowLogin(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
+  const handleCloseLogin = () => {
+    navigate("/");
+  };
 
   const handleLoadInventory = async () => {
     setInventoryLoading(true);
@@ -209,6 +239,32 @@ export default function Admin() {
         </aside>
 
         <section className="col-span-10 flex flex-col gap-6">
+          {/* Login modal */}
+          {showLogin && (
+            <LoginModal
+              onSuccess={handleLoginSuccess}
+              onClose={handleCloseLogin}
+              title="Acceso de Administrador"
+            />
+          )}
+
+          {!authorized && !showLogin && (
+            <div className="rounded-2xl bg-white p-12 shadow-sm border border-zinc-200 flex flex-col items-center justify-center gap-4">
+              <Lock size={48} className="text-zinc-300" />
+              <h2 className="text-xl font-semibold text-zinc-500">Acceso restringido</h2>
+              <p className="text-zinc-400 text-sm">Debes iniciar sesión como administrador para acceder a esta página.</p>
+              <button
+                onClick={() => setShowLogin(true)}
+                className="flex items-center gap-2 rounded-xl bg-zinc-900 px-6 py-3 font-medium text-white transition hover:bg-zinc-800 cursor-pointer"
+              >
+                <Lock size={18} />
+                Iniciar sesión
+              </button>
+            </div>
+          )}
+
+          {authorized && (
+          <>
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -217,6 +273,13 @@ export default function Admin() {
                 Trazabilidad de movimientos de stock
               </p>
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition cursor-pointer"
+            >
+              <LogOut size={16} />
+              Cerrar sesión
+            </button>
           </div>
 
           {/* Movimientos de Stock */}
@@ -711,6 +774,8 @@ export default function Admin() {
               </p>
             )}
           </div>
+          </>
+          )} {/* end authorized */}
         </section>
       </main>
     </div>

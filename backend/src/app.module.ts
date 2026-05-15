@@ -7,6 +7,8 @@ import { StockReceiptModule } from './stock-receipt/stock-receipt.module';
 import { TicketModule } from './ticket/ticket.module';
 import { ReturnsModule } from './returns/returns.module';
 import { InventoryAdjustmentModule } from './inventory-adjustment/inventory-adjustment.module';
+import { SettingsModule } from './settings/settings.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { InventoryAdjustmentModule } from './inventory-adjustment/inventory-adju
     TicketModule,
     ReturnsModule,
     InventoryAdjustmentModule,
+    SettingsModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { X, RotateCcw, AlertTriangle } from "lucide-react";
+import { X, RotateCcw, AlertTriangle, Lock } from "lucide-react";
 import { processReturn, type Ticket } from "../services/tickets";
+import { login } from "../services/auth";
 
 type Props = {
   ticket: Ticket;
@@ -22,6 +23,10 @@ export function ReturnModal({ ticket, onClose, onSuccess }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const hasSelection = Object.values(quantities).some((q) => q > 0);
 
@@ -35,7 +40,27 @@ export function ReturnModal({ ticket, onClose, onSuccess }: Props) {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password.trim()) return;
+
+    setPasswordLoading(true);
+    setPasswordError("");
+
+    try {
+      await login(password);
+      setShowPasswordPrompt(false);
+      setPassword("");
+      // Now proceed with the return
+      await doReturn();
+    } catch {
+      setPasswordError("Contraseña incorrecta");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const doReturn = async () => {
     const items = Object.entries(quantities)
       .filter(([, qty]) => qty > 0)
       .map(([id, qty]) => ({
@@ -60,6 +85,11 @@ export function ReturnModal({ ticket, onClose, onSuccess }: Props) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = () => {
+    // First, show password prompt
+    setShowPasswordPrompt(true);
   };
 
   return (
@@ -173,6 +203,66 @@ export function ReturnModal({ ticket, onClose, onSuccess }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Password prompt overlay */}
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" onClick={() => setShowPasswordPrompt(false)}>
+          <div className="bg-white rounded-2xl p-6 shadow-xl border border-zinc-200 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-6">
+              <Lock size={20} className="text-zinc-600" />
+              <h2 className="text-lg font-semibold text-zinc-900">Autorización requerida</h2>
+            </div>
+
+            <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Introduce tu contraseña para confirmar la devolución
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Contraseña"
+                  autoFocus
+                  className="
+                    w-full rounded-xl border border-zinc-200
+                    bg-zinc-50 px-4 py-3 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-zinc-400
+                  "
+                />
+              </div>
+
+              {passwordError && (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+                  <p className="text-sm text-red-700">{passwordError}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowPasswordPrompt(false); setPassword(""); setPasswordError(""); }}
+                  className="px-4 py-2.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium hover:bg-zinc-50 transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={!password.trim() || passwordLoading}
+                  className="
+                    flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-white
+                    bg-zinc-900 hover:bg-zinc-800 transition
+                    disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
+                  "
+                >
+                  <Lock size={18} />
+                  {passwordLoading ? "Verificando..." : "Autorizar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
