@@ -5,13 +5,14 @@ import { Book, Uncatalogued } from 'src/books/entities/bookEntity';
 import { StockReceiptDTO, StockReceiptOrderDTO } from './dto/stockReceipt.dto';
 import { StockReceiptOrder } from './entities/stockReceiptOrder.entity';
 import { StockReceiptOrderItem} from './entities/stockReceiptOrderItem.entity';
+import { StockMovement } from './entities/stock-movement.entity';
 
 @Injectable()
 export class StockReceiptService {
 
     constructor(
-        @InjectRepository(Book)
-        private readonly booksRepository: Repository<Book>,
+        @InjectRepository(StockMovement)
+        private readonly stockMovementRepository: Repository<StockMovement>,
         
         @InjectRepository(Uncatalogued)
         private readonly uncataloguedRepository: Repository<Uncatalogued>,
@@ -62,6 +63,8 @@ export class StockReceiptService {
                 } else {
                     await this.manageUncatalogued(element, manager);
                 }
+
+                this.recordMovement(manager, element.isbn, element.stock, 'stock captured', stockReceiptOrder.orderNo);
             }
             return savedOrder;
         });
@@ -91,5 +94,23 @@ export class StockReceiptService {
 
     async getUncataloguedByISBN(isbn: string) {
         return await this.uncataloguedRepository.findOneBy({ isbn });
+    }
+
+    async getMovementsByISBN(isbn: string) {
+        return await this.stockMovementRepository.find({
+            where: { isbn },
+            order: { createdAt: 'DESC'}
+        });
+    }
+
+    private async recordMovement(manager, isbn, quantity, type, reference?) {
+        const repo = manager.getRepository(StockMovement);
+        const newMovement = repo.create( {
+            isbn,
+            quantity,
+            type,
+            reference,
+        });
+        await repo.save(newMovement);
     }
 }

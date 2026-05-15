@@ -5,6 +5,7 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { TicketItem } from 'src/ticket/entities/ticket-item.entity';
 import { Sale } from 'src/sales/entities/sale.entity';
 import { Book } from 'src/books/entities/bookEntity';
+import { StockMovement } from 'src/stock-receipt/entities/stock-movement.entity';
 
 @Injectable()
 export class ReturnsService {
@@ -70,6 +71,7 @@ export class ReturnsService {
                 if (book) {
                     book.stock += itemToReturn.quantity;
                     await manager.save(book);
+                    await this.recordMovement(manager, book.isbn, itemToReturn.quantity, 'return', ticket.ticketNo);
                 }
             }
 
@@ -99,5 +101,15 @@ export class ReturnsService {
 
     }
 
+    private async recordMovement(manager, isbn, quantity, type, reference?) {
+        const repo = manager.getRepository(StockMovement);
+        const newMovement = repo.create( {
+            isbn,
+            quantity,
+            type,
+            reference,
+        });
+        await repo.save(newMovement);
+    }
 }
 

@@ -31,3 +31,16 @@ export function getUncataloguedByISBN(isbn: string) {
   return api.get<UncataloguedItem | null>(`/stock-receipt/isbn/${isbn}`);
 }
 
+export type StockMovement = {
+  id: number;
+  isbn: string;
+  quantity: number;
+  type: string;
+  reference: string | null;
+  createdAt: string;
+};
+
+export function getMovementsByISBN(isbn: string) {
+  return api.get<StockMovement[]>(`/stock-receipt/movements/${isbn}`);
+}
+

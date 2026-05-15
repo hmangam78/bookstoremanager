@@ -21,4 +21,8 @@ export class StockReceiptController {
         return this.stockReceiptService.getUncataloguedByISBN(isbn);
     }
 
+    @Get('movements/:isbn')
+    getMovementsByISBN(@Param('isbn') isbn: string) {
+        return this.stockReceiptService.getMovementsByISBN(isbn);
+    }
 }
