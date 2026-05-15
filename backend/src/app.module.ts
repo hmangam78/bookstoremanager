@@ -6,6 +6,7 @@ import { BasketModule } from './basket/basket.module';
 import { StockReceiptModule } from './stock-receipt/stock-receipt.module';
 import { TicketModule } from './ticket/ticket.module';
 import { ReturnsModule } from './returns/returns.module';
+import { InventoryAdjustmentModule } from './inventory-adjustment/inventory-adjustment.module';
 
 @Module({
   imports: [
@@ -25,8 +26,7 @@ import { ReturnsModule } from './returns/returns.module';
     StockReceiptModule,
     TicketModule,
     ReturnsModule,
+    InventoryAdjustmentModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}
