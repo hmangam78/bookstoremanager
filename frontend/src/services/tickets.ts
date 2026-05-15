@@ -32,3 +32,7 @@ export function getTicketByNumber(ticketNo: string) {
 export function getTicketBySaleId(saleId: number) {
   return api.get<Ticket>(`/ticket/sale/${saleId}`);
 }
+
+export function processReturn(payload: { ticketNo: string; items: { ticketItemId: number; quantity: number }[] }) {
+  return api.post<Ticket>("/returns", payload);
+}

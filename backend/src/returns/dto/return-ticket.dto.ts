@@ -1,4 +1,5 @@
-import { ArrayNotEmpty, IsArray,  IsNumber, IsPositive, IsString } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsNumber, IsPositive, IsString, ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
 
 export class ReturnTicketDTO {
     @IsString()
@@ -6,6 +7,8 @@ export class ReturnTicketDTO {
 
     @IsArray()
     @ArrayNotEmpty()
+    @ValidateNested({ each: true })
+    @Type(() => ReturnItemDTO)
     items: ReturnItemDTO[];
 }
 

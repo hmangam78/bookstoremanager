@@ -6,8 +6,6 @@ export class CreateSaleDTO {
     bookId: number;
 
     @IsNumber()
-    @IsPositive({ message: 'quantity must be greater than 0'})
-    @Max(100, { message: 'quantity cannot exceed 100 units' })
     quantity: number;
 
     @IsNumber()

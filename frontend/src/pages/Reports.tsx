@@ -3,10 +3,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Tag } from "lucide-react";
+import { Search, Calendar, BookText, ChevronRight, FileText, Clock, Tag, RotateCcw } from "lucide-react";
 import { getBooks, type Book } from "../services/books";
 import { getSalesByBook, getTodaySales, getSalesByPeriod, type Sale } from "../services/sales";
 import { getTicketByNumber, getTicketBySaleId, type Ticket } from "../services/tickets";
+import { ReturnModal } from "../components/ReturnModal";
 
 function formatDateFromISO(isoString: string): string {
   if (!isoString) return "";
@@ -72,6 +73,9 @@ export default function Reports() {
   const [ticketResult, setTicketResult] = useState<Ticket | null>(null);
   const [ticketLoading, setTicketLoading] = useState(false);
   const [ticketError, setTicketError] = useState("");
+
+  // Estado para devoluciones
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   const handleSearchPeriod = async () => {
     if (!periodDesde || !periodHasta) return;
@@ -310,12 +314,34 @@ export default function Reports() {
             {ticketResult && (
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-zinc-200 mt-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-zinc-900">
-                    Ticket #{ticketResult.ticketNo}
-                  </h3>
-                  <span className="text-sm text-zinc-500">
-                    {formatDateFromISO(ticketResult.createdAt)}
-                  </span>
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-900">
+                      Ticket #{ticketResult.ticketNo}
+                    </h3>
+                    <span className="text-sm text-zinc-500">
+                      {formatDateFromISO(ticketResult.createdAt)}
+                      {ticketResult.status === 'returned' && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          Devuelto
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  {ticketResult.status !== 'returned' && (
+                    <button
+                      onClick={() => setShowReturnModal(true)}
+                      className="
+                        flex items-center gap-2
+                        rounded-xl bg-red-600 px-4 py-2.5
+                        font-medium text-white text-sm
+                        transition hover:bg-red-700
+                        cursor-pointer
+                      "
+                    >
+                      <RotateCcw size={16} />
+                      Devolver
+                    </button>
+                  )}
                 </div>
 
                 {/* Items del ticket */}
@@ -326,6 +352,7 @@ export default function Reports() {
                         <th className="px-4 py-3">ISBN</th>
                         <th className="px-4 py-3">Título</th>
                         <th className="px-4 py-3">Unidades</th>
+                        <th className="px-4 py-3">Devueltas</th>
                         <th className="px-4 py-3">Precio Unitario</th>
                         <th className="px-4 py-3 rounded-r-xl">Total</th>
                       </tr>
@@ -334,8 +361,15 @@ export default function Reports() {
                       {ticketResult.items.map((item) => (
                         <tr key={item.id} className="border-t border-zinc-100 hover:bg-zinc-50">
                           <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.book.isbn}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.book.title}</td>
+                          <td className="px-4 py-3">{item.book.title}</td>
                           <td className="px-4 py-3">{item.quantity}</td>
+                          <td className="px-4 py-3">
+                            {item.returnedQuantity > 0 ? (
+                              <span className="text-red-600 font-medium">{item.returnedQuantity}</span>
+                            ) : (
+                              <span className="text-zinc-300">0</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">{Number(item.unitPrice).toFixed(2)} €</td>
                           <td className="px-4 py-3 font-medium">{Number(item.total).toFixed(2)} €</td>
                         </tr>
@@ -354,6 +388,18 @@ export default function Reports() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Return Modal */}
+            {showReturnModal && ticketResult && (
+              <ReturnModal
+                ticket={ticketResult}
+                onClose={() => setShowReturnModal(false)}
+                onSuccess={(updatedTicket) => {
+                  setTicketResult(updatedTicket);
+                  setShowReturnModal(false);
+                }}
+              />
             )}
           </div>
 

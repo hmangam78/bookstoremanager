@@ -26,8 +26,6 @@ export class ReturnsService {
                 throw new NotFoundException(`Ticket ${returnData.ticketNo} not found`);
             }
 
-            const itemsToProcess: TicketItem[] = [];
-
             // Validate items are in  ticket
             returnData.items.forEach((item) => {
                 const itemInTicket = ticket.items.find((ticketItem) => ticketItem.id === item.ticketItemId);
@@ -40,7 +38,6 @@ export class ReturnsService {
                     throw new BadRequestException(`Cannot return that quantity`);
                 }
 
-                itemsToProcess.push(itemInTicket);
             });
 
             // Process each return article
@@ -58,8 +55,15 @@ export class ReturnsService {
                     relations: ['book'],
                 });
 
+                // Create a negative sale for traceability
                 if (sale) {
-                    await saleRepo.remove(sale);
+                    const returnSale = saleRepo.create({
+                        book: sale.book,
+                        quantity: -itemToReturn.quantity,
+                        unitPrice: ticketItem.unitPrice,
+                        total: -(Number(ticketItem.unitPrice) * itemToReturn.quantity),
+                    });
+                    await saleRepo.save(returnSale);
                 }
                 
                 const book = await bookRepo.findOneBy({ id: ticketItem.bookId });
@@ -86,7 +90,11 @@ export class ReturnsService {
             ticket.totalAmount = Number(ticket.totalAmount) - returnedTotal;
             await ticketRepo.save(ticket);
 
-            return ticket;
+            // Reload the ticket with book relations for the frontend
+            return await ticketRepo.findOne({
+                where: { id: ticket.id },
+                relations: ['items', 'items.book'],
+            });
         });
 
     }
