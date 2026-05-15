@@ -226,16 +226,16 @@ export default function Reports() {
   return (
     <div className="min-h-screen bg-zinc-100">
       <Hero />
-      <main className="grid grid-cols-12 gap-6 p-6">
-        <aside className="col-span-2">
+      <main className="grid grid-cols-12 gap-4 lg:gap-6 p-4 lg:p-6">
+        <aside className="col-span-1 lg:col-span-2 self-start">
           <Sidebar />
         </aside>
 
-        <section className="col-span-10 flex flex-col gap-6">
+        <section className="col-span-11 lg:col-span-10 flex flex-col gap-4 lg:gap-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900">Informes de Ventas</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900">Informes de Ventas</h1>
               <p className="mt-2 text-zinc-600">
                 Consulta las ventas por período o por artículo
               </p>
@@ -254,7 +254,7 @@ export default function Reports() {
               "
             >
               <Clock size={20} />
-              {dailyLoading ? "Cargando..." : "Ventas del Día"}
+              <span className="hidden sm:inline">{dailyLoading ? "Cargando..." : "Ventas del Día"}</span>
             </button>
           </div>
 
@@ -264,8 +264,8 @@ export default function Reports() {
               Buscar Ticket
             </h2>
 
-            <div className="flex gap-4 items-end">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+              <div className="w-full sm:flex-1">
                 <label className="block text-sm font-medium text-zinc-700 mb-1">
                   Nº de Ticket
                 </label>
@@ -345,16 +345,16 @@ export default function Reports() {
                 </div>
 
                 {/* Items del ticket */}
-                <div className="overflow-hidden rounded-xl border border-zinc-200">
+                <div className="overflow-x-auto rounded-xl border border-zinc-200">
                   <table className="w-full text-sm text-left text-zinc-700">
                     <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                       <tr>
-                        <th className="px-4 py-3">ISBN</th>
-                        <th className="px-4 py-3">Título</th>
-                        <th className="px-4 py-3">Unidades</th>
-                        <th className="px-4 py-3">Devueltas</th>
-                        <th className="px-4 py-3">Precio Unitario</th>
-                        <th className="px-4 py-3 rounded-r-xl">Total</th>
+                        <th className="px-4 py-3 whitespace-nowrap">ISBN</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Título</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Unidades</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Devueltas</th>
+                        <th className="px-4 py-3 whitespace-nowrap">Precio Unitario</th>
+                        <th className="px-4 py-3 whitespace-nowrap rounded-r-xl">Total</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -404,7 +404,7 @@ export default function Reports() {
           </div>
 
           {/* Selector de tipo de reporte */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <button
               onClick={() => {
                 setReportType("period");
@@ -455,8 +455,8 @@ export default function Reports() {
                 Buscar ventas en un período
               </h2>
 
-              <div className="flex gap-4 mb-6">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="w-full sm:flex-1">
                   <label className="block text-sm font-medium text-zinc-700 mb-1">
                     Desde
                   </label>
@@ -475,7 +475,7 @@ export default function Reports() {
                   </div>
                 </div>
 
-                <div className="flex-1">
+                <div className="w-full sm:flex-1">
                   <label className="block text-sm font-medium text-zinc-700 mb-1">
                     Hasta
                   </label>
@@ -658,7 +658,7 @@ export default function Reports() {
               ) : (
                 <>
                   {/* Summary line */}
-                  <div className="flex gap-6 text-sm mb-6">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mb-6">
                     <div>
                       <span className="text-zinc-500">Total transacciones: </span>
                       <span className="font-semibold">{periodSales.length}</span>
@@ -682,15 +682,16 @@ export default function Reports() {
                     <h4 className="text-sm font-semibold text-zinc-700 mb-3">
                       Artículos vendidos (por unidades)
                     </h4>
+                    <div className="overflow-x-auto rounded-xl border border-zinc-200">
                     <table className="w-full text-sm text-left text-zinc-700">
                       <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                         <tr>
-                          <th className="px-4 py-3 rounded-l-xl">Unidades</th>
-                          <th className="px-4 py-3">Artículo</th>
-                          <th className="px-4 py-3">Autor</th>
-                          <th className="px-4 py-3">ISBN</th>
-                          <th className="px-4 py-3">Precio Medio</th>
-                          <th className="px-4 py-3 rounded-r-xl">Total</th>
+                          <th className="px-4 py-3 whitespace-nowrap rounded-l-xl">Unidades</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Artículo</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Autor</th>
+                          <th className="px-4 py-3 whitespace-nowrap">ISBN</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Precio Medio</th>
+                          <th className="px-4 py-3 whitespace-nowrap rounded-r-xl">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -728,6 +729,7 @@ export default function Reports() {
                           ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </>
               )}
@@ -747,7 +749,7 @@ export default function Reports() {
                 </p>
               ) : (
                 <>
-                  <div className="flex gap-6 text-sm mb-6">
+                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mb-6">
                     <div>
                       <span className="text-zinc-500">Total transacciones: </span>
                       <span className="font-semibold">{dailySales.length}</span>
@@ -770,15 +772,16 @@ export default function Reports() {
                     <h4 className="text-sm font-semibold text-zinc-700 mb-3">
                       Artículos vendidos (por unidades)
                     </h4>
+                    <div className="overflow-x-auto rounded-xl border border-zinc-200">
                     <table className="w-full text-sm text-left text-zinc-700">
                       <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                         <tr>
-                          <th className="px-4 py-3 rounded-l-xl">Unidades</th>
-                          <th className="px-4 py-3">Artículo</th>
-                          <th className="px-4 py-3">Autor</th>
-                          <th className="px-4 py-3">ISBN</th>
-                          <th className="px-4 py-3">Precio Medio</th>
-                          <th className="px-4 py-3 rounded-r-xl">Total</th>
+                          <th className="px-4 py-3 whitespace-nowrap rounded-l-xl">Unidades</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Artículo</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Autor</th>
+                          <th className="px-4 py-3 whitespace-nowrap">ISBN</th>
+                          <th className="px-4 py-3 whitespace-nowrap">Precio Medio</th>
+                          <th className="px-4 py-3 whitespace-nowrap rounded-r-xl">Total</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -816,6 +819,7 @@ export default function Reports() {
                           ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </>
               )}
@@ -881,7 +885,7 @@ export default function Reports() {
             ) : (
               <>
                 {/* Summary line */}
-                <div className="flex gap-6 text-sm mb-6">
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mb-6">
                   <div>
                     <span className="text-zinc-500">Total transacciones: </span>
                     <span className="font-semibold">{sales.length}</span>
@@ -905,14 +909,15 @@ export default function Reports() {
                   <h4 className="text-sm font-semibold text-zinc-700 mb-3">
                     Transacciones
                   </h4>
+                  <div className="overflow-x-auto rounded-xl border border-zinc-200">
                   <table className="w-full text-sm text-left text-zinc-700">
                   <thead className="text-xs uppercase bg-zinc-100 text-zinc-500">
                     <tr>
-                      <th className="px-4 py-3 rounded-l-xl">Nº Ticket</th>
-                      <th className="px-4 py-3">Unidades</th>
-                      <th className="px-4 py-3">Precio Unitario</th>
-                      <th className="px-4 py-3">Total</th>
-                      <th className="px-4 py-3 rounded-r-xl">Fecha</th>
+                      <th className="px-4 py-3 whitespace-nowrap rounded-l-xl">Nº Ticket</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Unidades</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Precio Unitario</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Total</th>
+                      <th className="px-4 py-3 whitespace-nowrap rounded-r-xl">Fecha</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -931,6 +936,7 @@ export default function Reports() {
                       ))}
                   </tbody>
                   </table>
+                  </div>
                 </div>
               </>
             )}

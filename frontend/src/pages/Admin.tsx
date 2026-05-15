@@ -233,12 +233,12 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-zinc-100">
       <Hero />
-      <main className="grid grid-cols-12 gap-6 p-6">
-        <aside className="col-span-2">
+      <main className="grid grid-cols-12 gap-4 lg:gap-6 p-4 lg:p-6">
+        <aside className="col-span-1 lg:col-span-2 self-start">
           <Sidebar />
         </aside>
 
-        <section className="col-span-10 flex flex-col gap-6">
+        <section className="col-span-11 lg:col-span-10 flex flex-col gap-4 lg:gap-6">
           {/* Login modal */}
           {showLogin && (
             <LoginModal
@@ -266,9 +266,9 @@ export default function Admin() {
           {authorized && (
           <>
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900">Administración</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900">Administración</h1>
               <p className="mt-2 text-zinc-600">
                 Trazabilidad de movimientos de stock
               </p>
@@ -278,7 +278,7 @@ export default function Admin() {
               className="flex items-center gap-2 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition cursor-pointer"
             >
               <LogOut size={16} />
-              Cerrar sesión
+              <span className="hidden sm:inline">Cerrar sesión</span>
             </button>
           </div>
 
@@ -679,7 +679,7 @@ export default function Admin() {
             {inventoryLoaded && cataloguedBooks !== null && (
               <>
                 {/* Summary */}
-                <div className="flex gap-6 text-sm mb-6">
+                <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm mb-6">
                   <div>
                     <span className="text-zinc-500">Libros catalogados: </span>
                     <span className="font-semibold">{cataloguedBooks.length}</span>

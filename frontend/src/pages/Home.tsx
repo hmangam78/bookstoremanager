@@ -39,12 +39,12 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-100">
       <Hero />
 
-      <main className="grid grid-cols-12 gap-6 p-6">
-        <aside className="col-span-2">
+      <main className="grid grid-cols-12 gap-4 lg:gap-6 p-4 lg:p-6">
+        <aside className="col-span-1 lg:col-span-2 self-start">
           <Sidebar />
         </aside>
 
-        <section className="col-span-7 flex flex-col gap-6">
+        <section className="col-span-8 lg:col-span-7 flex flex-col gap-4 lg:gap-6">
           <SearchBar onSearch={handleSearch} />
           <BookGrid
             searchQuery={searchQuery}
@@ -54,7 +54,7 @@ export default function Home() {
           />
         </section>
 
-        <aside className="col-span-3">
+        <aside className="col-span-3 lg:col-span-3">
           <Cart refreshTrigger={cartRefresh} onCheckoutSuccess={handleCheckoutSuccess} />
         </aside>
       </main>

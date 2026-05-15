@@ -68,15 +68,16 @@ export function BooksList({ onEditBook, refreshTrigger }: BooksListProps) {
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50">
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600">Título</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600">Autor</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600">ISBN</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-zinc-600">Precio</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold text-zinc-600">Stock</th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-zinc-600">Géneros</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600 whitespace-nowrap">Título</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600 whitespace-nowrap">Autor</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-600 whitespace-nowrap">ISBN</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-zinc-600 whitespace-nowrap">Precio</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold text-zinc-600 whitespace-nowrap">Stock</th>
+                <th className="px-6 py-3 text-center text-xs font-semibold text-zinc-600 whitespace-nowrap">Géneros</th>
               </tr>
             </thead>
             <tbody>
@@ -124,6 +125,7 @@ export function BooksList({ onEditBook, refreshTrigger }: BooksListProps) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

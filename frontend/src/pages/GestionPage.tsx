@@ -58,16 +58,16 @@ export default function GestionPage() {
   return (
     <div className="min-h-screen bg-zinc-100">
       <Hero />
-      <main className="grid grid-cols-12 gap-6 p-6">
-        <aside className="col-span-2">
+      <main className="grid grid-cols-12 gap-4 lg:gap-6 p-4 lg:p-6">
+        <aside className="col-span-1 lg:col-span-2 self-start">
           <Sidebar />
         </aside>
 
-        <section className="col-span-10 flex flex-col gap-6">
+        <section className="col-span-11 lg:col-span-10 flex flex-col gap-4 lg:gap-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-zinc-900">
+              <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900">
                 Gestión de Libros
               </h1>
               <p className="mt-2 text-zinc-600">
@@ -75,7 +75,7 @@ export default function GestionPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               {uncataloguedCount !== null && uncataloguedCount > 0 && (
                 <button
                   onClick={() => setShowUncataloguedList(true)}

@@ -109,6 +109,8 @@ export function BookGrid({ searchQuery = "", onAddToBasket, refreshTrigger = 0, 
         gap-4
         md:grid-cols-2
         xl:grid-cols-3
+        2xl:grid-cols-4
+        3xl:grid-cols-5
       "
     >
       {filteredBooks.map((book) => (

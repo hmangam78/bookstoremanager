@@ -32,13 +32,13 @@ export function Sidebar() {
       className="
         rounded-2xl
         bg-white
-        p-4
+        p-3 lg:p-4
         shadow-sm
         border
         border-zinc-200
       "
     >
-      <nav className="flex flex-col gap-3">
+      <nav className="flex flex-col items-center lg:items-stretch gap-1 lg:gap-3 w-full">
         {items.map((item) => {
           const Icon = item.icon;
 
@@ -46,18 +46,18 @@ export function Sidebar() {
             <button
               key={item.label}
               onClick={item.onClick}
+              title={item.label}
               className="
-                flex items-center gap-3
+                flex items-center gap-3 lg:justify-start justify-center
                 rounded-xl
-                px-4 py-3
-                text-left
+                p-3 lg:px-4 lg:py-3
                 transition
                 hover:bg-zinc-100
-              cursor-pointer
+                cursor-pointer w-full
               "
             >
-              <Icon size={18} />
-              <span className="font-medium">{item.label}</span>
+              <Icon size={18} className="shrink-0" />
+              <span className="font-medium hidden lg:inline whitespace-nowrap">{item.label}</span>
             </button>
           );
         })}
