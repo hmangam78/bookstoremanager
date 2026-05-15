@@ -721,7 +721,7 @@ export default function Reports() {
                               <td className="px-4 py-3 text-zinc-600">{item.author}</td>
                               <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.isbn}</td>
                               <td className="px-4 py-3">
-                                {(item.total / item.unidades).toFixed(2)} €
+                                {item.unidades > 0 ? `${(item.total / item.unidades).toFixed(2)} €` : '—'}
                               </td>
                               <td className="px-4 py-3">{item.total.toFixed(2)} €</td>
                             </tr>
@@ -809,7 +809,7 @@ export default function Reports() {
                               <td className="px-4 py-3 text-zinc-600">{item.author}</td>
                               <td className="px-4 py-3 font-mono text-xs text-zinc-500">{item.isbn}</td>
                               <td className="px-4 py-3">
-                                {(item.total / item.unidades).toFixed(2)} €
+                                {item.unidades > 0 ? `${(item.total / item.unidades).toFixed(2)} €` : '—'}
                               </td>
                               <td className="px-4 py-3">{item.total.toFixed(2)} €</td>
                             </tr>
