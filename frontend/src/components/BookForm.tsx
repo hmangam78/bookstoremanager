@@ -340,6 +340,30 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
                 placeholder="0.00"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Editorial</label>
+              <input
+                type="text"
+                name="publisher"
+                value={formData.publisher || ""}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                placeholder="Editorial (opcional)"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Distribuidora</label>
+              <input
+                type="text"
+                name="distributor"
+                value={formData.distributor || ""}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
+                placeholder="Distribuidora (opcional)"
+              />
+            </div>
           </div>
 
           <div>

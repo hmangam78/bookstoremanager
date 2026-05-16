@@ -40,6 +40,14 @@ export class CreateBookDTO {
     @IsOptional()
     @IsString()
     imageUrl?: string;
+
+    @IsOptional()
+    @IsString()
+    publisher?: string;
+
+    @IsOptional()
+    @IsString()
+    distributor?: string;
 }
 
 export class UpdateBookDTO {
@@ -81,4 +89,12 @@ export class UpdateBookDTO {
     @IsArray()
     @IsString({ each: true })
     genre?: string[];
+
+    @IsOptional()
+    @IsString()
+    publisher?: string;
+
+    @IsOptional()
+    @IsString()
+    distributor?: string;
 }

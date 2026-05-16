@@ -41,6 +41,11 @@ export class Book {
     @Column({ nullable: true, type: 'varchar' })
     imageUrl?: string;
 
+    @Column({ nullable: true })
+    publisher?: string;
+
+    @Column({ nullable: true })
+    distributor?: string;
 }
 
 @Entity()

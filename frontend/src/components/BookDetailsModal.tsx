@@ -161,15 +161,30 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
                   {isAdding ? "Añadiendo..." : "Añadir a la cesta"}
                 </button>
               )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-zinc-600 font-medium">ISBN</p>
+                  <p className="text-zinc-900 font-mono">{book.isbn}</p>
+                </div>
 
-              <div>
-                <p className="text-sm text-zinc-600 font-medium">ISBN</p>
-                <p className="text-zinc-900 font-mono">{book.isbn}</p>
-              </div>
+                <div>
+                  <p className="text-sm text-zinc-600 font-medium">Formato</p>
+                  <p className="text-zinc-900">{book.format}</p>
+                </div>
 
-              <div>
-                <p className="text-sm text-zinc-600 font-medium">Formato</p>
-                <p className="text-zinc-900">{book.format}</p>
+                {book.publisher && (
+                  <div>
+                    <p className="text-sm text-zinc-600 font-medium">Editorial</p>
+                    <p className="text-zinc-900">{book.publisher}</p>
+                  </div>
+                )}
+
+                {book.distributor && (
+                  <div>
+                    <p className="text-sm text-zinc-600 font-medium">Distribuidora</p>
+                    <p className="text-zinc-900">{book.distributor}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

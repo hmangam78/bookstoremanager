@@ -11,6 +11,8 @@ export type Book = {
   isbn: string;
   format: string;
   imageUrl?: string;
+  publisher?: string;
+  distributor?: string;
 };
 
 export type CreateBookInput = Omit<Book, 'id'>;
