@@ -11,6 +11,7 @@ import { SettingsModule } from './settings/settings.module';
 import { AuthModule } from './auth/auth.module';
 import { CustomerOrderModule } from './customer-order/customer-order.module';
 import { CustomerModule } from './customer/customer.module';
+import { ProviderReturnModule } from './provider-return/provider-return.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { CustomerModule } from './customer/customer.module';
     AuthModule,
     CustomerOrderModule,
     CustomerModule,
+    ProviderReturnModule,
   ],
 })
 export class AppModule {}
