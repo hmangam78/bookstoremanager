@@ -31,6 +31,18 @@ export function getBookById(id: number) {
     return api.get<Book>(`/books/${id}`);
 }
 
+export function getBooksByPublisher(publisher: string) {
+    return api.get<Book[]>("/books/by-publisher", {
+        params: { publisher },
+    });
+}
+
+export function getBooksByDistributor(distributor: string) {
+    return api.get<Book[]>("/books/by-distributor", {
+        params: { distributor },
+    });
+}
+
 export function createBook(book: CreateBookInput) {
     return api.post<Book>("/books", book);
 }

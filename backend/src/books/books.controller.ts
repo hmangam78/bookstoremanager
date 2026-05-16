@@ -23,6 +23,16 @@ export class BooksController {
         return this.bookService.getBookByISBN(isbn);
     }
     
+    @Get('by-publisher')
+    getAllByPublisher(@Query('publisher') publisher: string) {
+        return this.bookService.getAllByPublisher(publisher);
+    }
+
+    @Get('by-distributor')
+    getAllByDistributor(@Query('distributor') distributor: string) {
+        return this.bookService.getAllByDistributor(distributor);
+    }
+
     @Get(':id')
     getOneById(@Param('id', ParseIntPipe) id: number) {
         return this.bookService.getBookById(id);

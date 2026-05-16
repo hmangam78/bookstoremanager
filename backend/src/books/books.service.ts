@@ -49,6 +49,14 @@ export class BooksService {
         return this.booksRepository.findOneBy({ isbn });
     }
 
+    getAllByPublisher(publisher: string) {
+        return this.booksRepository.find({ where: { publisher } });
+    }
+
+    getAllByDistributor(distributor: string) {
+        return this.booksRepository.find({ where: { distributor } });
+    }
+
     async updateBookData(id: number, updatedData: UpdateBookDTO) {
         await this.booksRepository.update(id, updatedData);
         return this.booksRepository.findOneBy({ id });
