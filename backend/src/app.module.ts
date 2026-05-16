@@ -9,6 +9,8 @@ import { ReturnsModule } from './returns/returns.module';
 import { InventoryAdjustmentModule } from './inventory-adjustment/inventory-adjustment.module';
 import { SettingsModule } from './settings/settings.module';
 import { AuthModule } from './auth/auth.module';
+import { CustomerOrderModule } from './customer-order/customer-order.module';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { AuthModule } from './auth/auth.module';
     InventoryAdjustmentModule,
     SettingsModule,
     AuthModule,
+    CustomerOrderModule,
+    CustomerModule,
   ],
 })
 export class AppModule {}
