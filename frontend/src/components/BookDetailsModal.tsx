@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { X, ShoppingCart } from "lucide-react";
+import { X, ShoppingCart, ClipboardList } from "lucide-react";
 import { getBookById } from "../services/books";
 import { addToBasket } from "../services/basket";
 import type { Book } from "../services/books";
+import { CustomerOrderModal } from "./CustomerOrderModal";
 
 type BookDetailsModalProps = {
   bookId: number;
@@ -15,6 +16,7 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [showCustomerOrder, setShowCustomerOrder] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -133,7 +135,7 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
                 </div>
               </div>
 
-              {book.stock > 0 && (
+              {book.stock > 0 ? (
                 <button
                   onClick={handleAddToBasket}
                   disabled={isAdding}
@@ -159,6 +161,30 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
                 >
                   <ShoppingCart size={18} />
                   {isAdding ? "Añadiendo..." : "Añadir a la cesta"}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowCustomerOrder(true)}
+                  className="
+                    w-full
+                    rounded-xl
+                    bg-amber-600
+                    px-4
+                    py-3
+                    text-sm
+                    font-medium
+                    text-white
+                    transition
+                    hover:bg-amber-700
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    mt-2
+                  "
+                >
+                  <ClipboardList size={18} />
+                  Pedido de cliente
                 </button>
               )}
               <div className="grid grid-cols-2 gap-4">
@@ -229,6 +255,19 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
           </div>
         </div>
       </div>
+
+      {/* Customer Order Modal */}
+      {showCustomerOrder && book && (
+        <CustomerOrderModal
+          isbn={book.isbn}
+          bookTitle={book.title}
+          onClose={() => setShowCustomerOrder(false)}
+          onSuccess={() => {
+            // Refresh book data to get updated stock
+            getBookById(bookId).then((res) => setBook(res.data));
+          }}
+        />
+      )}
     </div>
   );
 }

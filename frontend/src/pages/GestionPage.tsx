@@ -3,8 +3,9 @@ import { BookForm } from "../components/BookForm";
 import { BooksList } from "../components/BooksList";
 import { Sidebar } from "../components/Sidebar";
 import { Hero } from "../components/Hero";
-import { Plus, PackageSearch, AlertTriangle } from "lucide-react";
+import { Plus, PackageSearch, ClipboardList, AlertTriangle } from "lucide-react";
 import { StockReceiptModal } from "../components/StockReceiptModal";
+import { CustomerOrdersListModal } from "../components/CustomerOrdersListModal";
 import { UncataloguedListModal } from "../components/UncataloguedListModal";
 import { getUncatalogued, type UncataloguedItem } from "../services/stockReceipt";
 import type { CreateBookInput } from "../services/books";
@@ -14,6 +15,7 @@ export default function GestionPage() {
   const [editingBookId, setEditingBookId] = useState<number | undefined>();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showStockReceipt, setShowStockReceipt] = useState(false);
+  const [showCustomerOrders, setShowCustomerOrders] = useState(false);
   const [uncataloguedCount, setUncataloguedCount] = useState<number | null>(null);
   const [showUncataloguedList, setShowUncataloguedList] = useState(false);
   const [bookFormPrefill, setBookFormPrefill] = useState<Partial<CreateBookInput> | undefined>(undefined);
@@ -114,6 +116,25 @@ export default function GestionPage() {
               </button>
 
               <button
+                onClick={() => setShowCustomerOrders(true)}
+                className="
+                  flex items-center gap-2
+                  rounded-xl
+                  border border-zinc-300
+                  bg-white
+                  px-4 py-3
+                  font-medium
+                  text-zinc-700
+                  transition
+                  hover:bg-zinc-50
+                  cursor-pointer
+                "
+              >
+                <ClipboardList size={20} />
+                Pedidos de Cliente
+              </button>
+
+              <button
                 onClick={handleOpenForm}
                 className="
                   flex items-center gap-2
@@ -155,6 +176,11 @@ export default function GestionPage() {
               setShowStockReceipt(false);
               setRefreshTrigger((prev) => prev + 1);
             }} />
+          )}
+
+          {/* Customer Orders Modal */}
+          {showCustomerOrders && (
+            <CustomerOrdersListModal onClose={() => setShowCustomerOrders(false)} />
           )}
 
           {/* Uncatalogued List Modal */}

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import { Customer } from './entities/customerEntity';
 import { CreateCustomerDTO, UpdateCustomerDTO } from './dto/customer.dto';
 
@@ -25,7 +25,9 @@ export class CustomerService {
     }
 
     getCustomerByName(name: string) {
-        return this.customerRepository.findOneBy({ name });
+        return this.customerRepository.find({
+            where: { name: ILike(`%${name}%`) },
+        });
     }
 
     async createCustomer(data: CreateCustomerDTO) {

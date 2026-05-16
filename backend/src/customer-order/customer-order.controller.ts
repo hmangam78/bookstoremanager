@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Post, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Body, Post, ParseIntPipe, Query, Delete, Param } from '@nestjs/common';
 import { CustomerOrderService } from './customer-order.service';
 import { CustomerOrderDTO } from './dto/customerOrder.dto';
 
@@ -21,5 +21,10 @@ export class CustomerOrderController {
     @Post()
     createOrder(@Body() data: CustomerOrderDTO[]) {
         return this.customerOrderService.createOrderBatch(data);
+    }
+
+    @Delete(':orderId')
+    deleteOrder(@Param('orderId', ParseIntPipe) orderId: number) {
+        return this.customerOrderService.deleteOrder(orderId);
     }
 }
