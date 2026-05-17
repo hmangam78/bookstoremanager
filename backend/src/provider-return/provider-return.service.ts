@@ -97,4 +97,16 @@ export class ProviderReturnService {
 
         return createdReturns;
     }
+
+    async getAllReturns() {
+        return await this.providerReturnRepository.find();
+    }
+
+    getReturnsByProvider(providerId: number) {
+        return this.providerReturnRepository.find({ where: { providerId } });
+    }
+
+    getReturnsByPublisher(publisherId: number) {
+        return this.providerReturnRepository.find({ where: { publisherId } });
+    }
 }
