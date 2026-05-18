@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BookCard } from "./BookCard";
-import { getBooks, getBooksPaginated } from "../services/books";
+import { getBooksPaginated } from "../services/books";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Book = {

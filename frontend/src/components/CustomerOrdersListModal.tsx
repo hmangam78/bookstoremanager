@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, ClipboardList, Search, BookOpen, User, Trash2, ShoppingCart, AlertTriangle } from "lucide-react";
+import { X, ClipboardList, Search, BookOpen, User, Trash2, ShoppingCart } from "lucide-react";
 import { getAllCustomerOrders, deleteCustomerOrder, type CustomerOrder } from "../services/customerOrders";
 import { getBookByISBN } from "../services/stockReceipt";
 import { addToBasket } from "../services/basket";

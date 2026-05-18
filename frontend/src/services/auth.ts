@@ -10,6 +10,10 @@ export interface CheckResponse {
     level: 'admin' | 'user';
 }
 
+export interface SetupStateResponse {
+    needsSetup: boolean;
+}
+
 const TOKEN_KEY = 'auth_token';
 const LEVEL_KEY = 'auth_level';
 
@@ -51,6 +55,19 @@ export async function checkSession(): Promise<CheckResponse> {
         logout();
         return { valid: false, level: 'user' };
     }
+}
+
+export async function getSetupState(): Promise<SetupStateResponse> {
+    const { data } = await api.get<SetupStateResponse>('/auth/setup-state');
+    return data;
+}
+
+export async function setupInitialPasswords(adminPassword: string, userPassword: string): Promise<LoginResponse> {
+    const { data } = await api.post<LoginResponse>('/auth/setup', { adminPassword, userPassword });
+    localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(LEVEL_KEY, data.level);
+    api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    return data;
 }
 
 export async function changePassword(settingKey: string, newPassword: string): Promise<void> {

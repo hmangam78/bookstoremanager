@@ -31,7 +31,7 @@ This application is designed from the ground up to solve these real-world bookst
 - **Modular monolith** — NestJS modules (`BooksModule`, `SalesModule`, `BasketModule`, etc.) with clear separation of concerns
 - **Transactional workflows** — critical operations (checkout, stock receipt, inventory adjustment) run inside database transactions with pessimistic locking to prevent race conditions on stock quantities
 - **Service-layer orchestration** — the `BasketService` coordinates `BooksService`, `SalesService`, and `TicketService` to execute a multi-step checkout workflow
-- **In-memory session auth** — password-gated access control with user/admin levels, suitable for local-first POS deployments
+- **In-memory session auth** — password-gated access control with user/admin levels, using cryptographically strong session tokens and local session expiry
 - **DTO validation** — class-validator with whitelist/transformation on all API endpoints
 
 ### Database & Concurrency
@@ -129,45 +129,91 @@ At inventory time, an admin loads the full inventory (catalogued + uncatalogued)
 
 ### Prerequisites
 - Node.js 20+
-- Docker (for PostgreSQL)
+- Docker (for PostgreSQL and the production stack)
 - npm
 
-### Quick start
+### Developer quickstart (non-Docker)
+
+1. Start PostgreSQL (local or via Docker):
 
 ```bash
-# 1. Start PostgreSQL
-docker compose up -d
+# start only postgres via compose
+docker compose up -d postgres
+```
 
-# 2. Install backend dependencies
+2. Backend (development):
+
+```bash
 cd backend
 npm install
-
-# 3. Start the API (development mode, watch mode)
 npm run start:dev
+```
 
-# 4. In a new terminal, install & start the frontend
+3. Frontend (development):
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-The API runs on `http://localhost:3000` and the frontend on `http://localhost:5173`.
+Open the frontend at `http://localhost:5173` and the API at `http://localhost:3000` (dev defaults).
 
-### Docker Compose deployment
+### Docker Compose deployment (recommended)
+
+The repository includes Dockerfiles for the backend and frontend and a `docker-compose.yml` that builds and runs the full stack (Postgres, backend API, and static frontend via nginx).
+
+Bring the stack up (build images the first time):
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
-This starts PostgreSQL on `localhost:5432`, the backend on `http://localhost:3000`, and the frontend on `http://localhost:8080`.
+Default published host ports (changeable via a `.env` or by editing `docker-compose.yml`):
+- PostgreSQL: host `localhost:5555` -> container `5432`
+- Backend API: host `http://localhost:3001` -> container `3000`
+- Frontend (nginx): host `http://localhost:8080` -> container `80`
 
-This starts PostgreSQL on `localhost:5432`, the backend on `http://localhost:3001`, and the frontend on `http://localhost:8080`.
+To stop and remove the containers and network:
 
-The frontend is built with `VITE_API_URL=http://localhost:3001`, so it can talk to the API from the browser without extra setup.
+```bash
+docker compose down
+```
 
-### Default credentials
-- **User access:** password `user`
-- **Admin access:** password `admin`
+### Environment variables
+
+You can place a `.env` file next to `docker-compose.yml` to override Compose defaults. Important variables used by the services:
+
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` — Postgres credentials.
+- `POSTGRES_PORT` — host port mapping for postgres (default used in compose: `5555`).
+- Backend runtime variables (set in compose): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+- `DB_SYNCHRONIZE` — controls TypeORM `synchronize` (defaults to `false` in compose; DO NOT enable in production).
+- `CORS_ORIGIN` — comma-separated allowed origins for the backend (compose uses `http://localhost:8080` by default).
+- Frontend build arg: `VITE_API_URL` — used when building the frontend image so the static site knows where to call the API.
+
+Example `.env`:
+
+```env
+POSTGRES_USER=bookstore
+POSTGRES_PASSWORD=bookstore
+POSTGRES_DB=bookstore
+POSTGRES_PORT=5555
+```
+
+### What changed in this repo (recent updates)
+
+- Added `backend/Dockerfile` and `frontend/Dockerfile` and a simple `frontend/nginx.conf` to serve the production bundle.
+- Expanded `docker-compose.yml` to include backend and frontend services and reasonable defaults.
+- Backend configuration moved from hardcoded values to environment-driven values in `backend/src/app.module.ts` (DB connection) and `backend/src/main.ts` (CORS origins).
+- `DB_SYNCHRONIZE` is disabled by default in the Compose production settings.
+- Frontend relies on `VITE_API_URL` (build arg / `import.meta.env.VITE_API_URL`) for the API base URL.
+- Removed an unused standalone provider-return page to keep the top-level navigation to four pages; provider returns remain accessible inside the Admin screens.
+
+
+### First-run setup
+- On a fresh database, the app opens a one-time setup screen that requires you to create both the admin and user passwords.
+- Those passwords are stored hashed in PostgreSQL and you choose them during setup, so they are never printed to logs.
+- If you reset the database, you will see the setup screen again.
 
 ---
 
@@ -182,6 +228,7 @@ The frontend is built with `VITE_API_URL=http://localhost:3001`, so it can talk 
 | **Stock Receipt** | `POST /stock-receipt/upload`, `GET /stock-receipt/uncatalogued`, `GET /stock-receipt/uncatalogued/:isbn`, `GET /stock-receipt/movements/:isbn` | Public |
 | **Returns** | `POST /returns/return` | User/Admin |
 | **Customer Orders** | `GET /customer-orders`, `GET /customer-orders/customer/:id`, `POST /customer-orders`, `DELETE /customer-orders/:id` | Public |
+| **Provider Returns** | `GET /provider-return`, `GET /provider-return/active`, `GET /provider-return/finished`, `GET /provider-return/:id`, `POST /provider-return`, `PATCH /provider-return/:id`, `DELETE /provider-return/:id`, `PATCH /provider-return/:id/send` | Admin |
 | **Inventory Adjustment** | `POST /inventory-adjustment/adjustStock` | Admin |
-| **Auth** | `POST /auth/login`, `GET /auth/session`, `POST /auth/logout`, `POST /auth/change-password` | Mixed |
+| **Auth** | `GET /auth/setup-state`, `POST /auth/setup`, `POST /auth/login`, `GET /auth/session`, `POST /auth/logout`, `POST /auth/change-password` | Mixed |
 | **Settings** | `GET /settings/admin-password-setup` | Public |

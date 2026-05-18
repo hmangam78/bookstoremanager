@@ -8,7 +8,7 @@ import { getBooks, type Book } from "../services/books";
 import { getMovementsByISBN, type StockMovement, getUncatalogued, type UncataloguedItem, getBookByISBN } from "../services/stockReceipt";
 import { api } from "../lib/api";
 import { LoginModal } from "../components/LoginModal";
-import { checkSession, logout, isAuthenticated, isAdmin } from "../services/auth";
+import { logout, isAuthenticated, isAdmin } from "../services/auth";
 import { useNavigate } from "react-router-dom";
 import {
   createProviderReturn,
@@ -93,7 +93,7 @@ export default function Admin() {
     }
   }, []);
 
-  const handleLoginSuccess = (level: string) => {
+  const handleLoginSuccess = () => {
     setAuthorized(true);
     setShowLogin(false);
   };
@@ -515,7 +515,7 @@ export default function Admin() {
                   />
                   <DatePicker
                     selected={movementDesde}
-                    onChange={(date) => setMovementDesde(date)}
+                    onChange={(date: Date | null) => setMovementDesde(date)}
                     dateFormat="dd-MM-yyyy"
                     placeholderText="DD-MM-YYYY"
                     className={datePickerClass}
@@ -535,7 +535,7 @@ export default function Admin() {
                   />
                   <DatePicker
                     selected={movementHasta}
-                    onChange={(date) => setMovementHasta(date)}
+                    onChange={(date: Date | null) => setMovementHasta(date)}
                     dateFormat="dd-MM-yyyy"
                     placeholderText="DD-MM-YYYY"
                     className={datePickerClass}

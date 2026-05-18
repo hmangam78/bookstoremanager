@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
 import { SettingsService } from 'src/settings/settings.service';
 
 /**
@@ -16,12 +17,14 @@ export enum AuthLevel {
 @Injectable()
 export class AuthService {
 
+    private readonly sessionTtlMs = 12 * 60 * 60 * 1000;
+
     /**
      * In-memory session store.
-     * Maps a session token (random string) -> auth level granted.
+     * Maps a session token (random string) -> auth level and expiry.
      * For a local app this is fine; it resets when the server restarts.
      */
-    private readonly sessions = new Map<string, AuthLevel>();
+    private readonly sessions = new Map<string, { level: AuthLevel; expiresAt: number }>();
 
     constructor(
         private readonly settingsService: SettingsService,
@@ -32,11 +35,15 @@ export class AuthService {
      * Returns a session token on success, or throws on failure.
      */
     async login(password: string): Promise<{ token: string; level: AuthLevel }> {
+        if (!(await this.settingsService.isAuthConfigured())) {
+            throw new UnauthorizedException('El sistema requiere configuración inicial');
+        }
+
         // Try admin first (admin password also grants user access)
         const isAdmin = await this.settingsService.verify('admin_password', password);
         if (isAdmin) {
             const token = this.generateToken();
-            this.sessions.set(token, AuthLevel.ADMIN);
+            this.sessions.set(token, { level: AuthLevel.ADMIN, expiresAt: Date.now() + this.sessionTtlMs });
             return { token, level: AuthLevel.ADMIN };
         }
 
@@ -44,7 +51,7 @@ export class AuthService {
         const isUser = await this.settingsService.verify('user_password', password);
         if (isUser) {
             const token = this.generateToken();
-            this.sessions.set(token, AuthLevel.USER);
+            this.sessions.set(token, { level: AuthLevel.USER, expiresAt: Date.now() + this.sessionTtlMs });
             return { token, level: AuthLevel.USER };
         }
 
@@ -62,10 +69,17 @@ export class AuthService {
             throw new UnauthorizedException('Se requiere autenticación');
         }
 
-        const grantedLevel = this.sessions.get(token);
-        if (!grantedLevel) {
+        const session = this.sessions.get(token);
+        if (!session) {
             throw new UnauthorizedException('Sesión inválida o expirada');
         }
+
+        if (session.expiresAt <= Date.now()) {
+            this.sessions.delete(token);
+            throw new UnauthorizedException('Sesión inválida o expirada');
+        }
+
+        const grantedLevel = session.level;
 
         // ADMIN level satisfies ADMIN or USER requirements
         if (requiredLevel === AuthLevel.ADMIN && grantedLevel !== AuthLevel.ADMIN) {
@@ -88,6 +102,15 @@ export class AuthService {
         await this.settingsService.updatePassword(settingKey, newPassword);
     }
 
+    async setupInitialPasswords(adminPassword: string, userPassword: string): Promise<{ token: string; level: AuthLevel }> {
+        if (await this.settingsService.isAuthConfigured()) {
+            throw new ForbiddenException('La configuración inicial ya fue completada');
+        }
+
+        await this.settingsService.setInitialPasswords(adminPassword, userPassword);
+        return this.login(adminPassword);
+    }
+
     /**
      * Log out: invalidate a session token.
      */
@@ -96,11 +119,6 @@ export class AuthService {
     }
 
     private generateToken(): string {
-        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        for (let i = 0; i < 32; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
+        return randomBytes(32).toString('hex');
     }
 }

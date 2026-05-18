@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Setting } from './entities/setting.entity';
@@ -7,33 +7,25 @@ import * as bcrypt from 'bcrypt';
 const SALT_ROUNDS = 10;
 
 @Injectable()
-export class SettingsService implements OnModuleInit {
+export class SettingsService {
 
     constructor(
         @InjectRepository(Setting)
         private readonly settingRepo: Repository<Setting>,
     ) {}
 
-    /**
-     * On startup, ensure default settings exist if the table is empty.
-     */
-    async onModuleInit() {
-        const adminPw = await this.get('admin_password');
-        if (!adminPw) {
-            const hash = await bcrypt.hash('admin', SALT_ROUNDS);
-            await this.set('admin_password', hash);
-        }
-
-        const userPw = await this.get('user_password');
-        if (!userPw) {
-            const hash = await bcrypt.hash('user', SALT_ROUNDS);
-            await this.set('user_password', hash);
-        }
-    }
-
     async get(key: string): Promise<string | null> {
         const setting = await this.settingRepo.findOneBy({ key });
         return setting?.value ?? null;
+    }
+
+    async isAuthConfigured(): Promise<boolean> {
+        const [adminPw, userPw] = await Promise.all([
+            this.get('admin_password'),
+            this.get('user_password'),
+        ]);
+
+        return !!adminPw && !!userPw;
     }
 
     async set(key: string, value: string): Promise<void> {
@@ -62,5 +54,18 @@ export class SettingsService implements OnModuleInit {
     async updatePassword(key: string, newPassword: string): Promise<void> {
         const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
         await this.set(key, hash);
+    }
+
+    async setInitialPasswords(adminPassword: string, userPassword: string): Promise<void> {
+        const [adminHash, userHash] = await Promise.all([
+            bcrypt.hash(adminPassword, SALT_ROUNDS),
+            bcrypt.hash(userPassword, SALT_ROUNDS),
+        ]);
+
+        await this.settingRepo.manager.transaction(async (manager) => {
+            const repository = manager.getRepository(Setting);
+            await repository.save(repository.create({ key: 'admin_password', value: adminHash }));
+            await repository.save(repository.create({ key: 'user_password', value: userHash }));
+        });
     }
 }

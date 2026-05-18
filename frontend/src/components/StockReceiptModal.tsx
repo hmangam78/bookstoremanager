@@ -65,7 +65,7 @@ export function StockReceiptModal({ onClose }: Props) {
     setResult(null);
 
     try {
-      const { data } = await uploadStockReceipt({
+      await uploadStockReceipt({
         orderNo,
         items: items.map(({ isbn, stock }) => ({ isbn, stock }))
       });

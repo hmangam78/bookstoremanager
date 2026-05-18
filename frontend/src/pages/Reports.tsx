@@ -467,7 +467,7 @@ export default function Reports() {
                     />
                     <DatePicker
                       selected={periodDesde}
-                      onChange={(date) => setPeriodDesde(date)}
+                      onChange={(date: Date | null) => setPeriodDesde(date)}
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
@@ -486,7 +486,7 @@ export default function Reports() {
                     />
                     <DatePicker
                       selected={periodHasta}
-                      onChange={(date) => setPeriodHasta(date)}
+                      onChange={(date: Date | null) => setPeriodHasta(date)}
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
@@ -553,7 +553,7 @@ export default function Reports() {
                     />
                     <DatePicker
                       selected={articleDesde}
-                      onChange={(date) => setArticleDesde(date)}
+                      onChange={(date: Date | null) => setArticleDesde(date)}
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
@@ -573,7 +573,7 @@ export default function Reports() {
                     />
                     <DatePicker
                       selected={articleHasta}
-                      onChange={(date) => setArticleHasta(date)}
+                      onChange={(date: Date | null) => setArticleHasta(date)}
                       dateFormat="dd-MM-yyyy"
                       placeholderText="DD-MM-YYYY"
                       className={datePickerClass}
