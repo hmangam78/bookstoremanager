@@ -27,7 +27,7 @@ export function Hero() {
       <div className="relative z-10 flex h-full items-center px-8">
         <div>
           <h1 className="text-4xl font-bold text-white">
-            Mi Librería
+            BookStore Manager
           </h1>
 
           <p className="mt-2 text-sm text-zinc-200">
