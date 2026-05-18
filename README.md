@@ -153,6 +153,18 @@ npm run dev
 
 The API runs on `http://localhost:3000` and the frontend on `http://localhost:5173`.
 
+### Docker Compose deployment
+
+```bash
+docker compose up --build
+```
+
+This starts PostgreSQL on `localhost:5432`, the backend on `http://localhost:3000`, and the frontend on `http://localhost:8080`.
+
+This starts PostgreSQL on `localhost:5432`, the backend on `http://localhost:3001`, and the frontend on `http://localhost:8080`.
+
+The frontend is built with `VITE_API_URL=http://localhost:3001`, so it can talk to the API from the browser without extra setup.
+
 ### Default credentials
 - **User access:** password `user`
 - **Admin access:** password `admin`
