@@ -20,10 +20,12 @@ export class InventoryAdjustmentService {
             const lockKey = this.isbnToLockKey(itemData.isbn);
             await manager.query(`SELECT pg_advisory_xact_lock(${lockKey})`);
 
-            const cataloguedItem = await manager.getRepository(Book).findOne({
-                where: { isbn: itemData.isbn },
-                lock: { mode: 'pessimistic_write' },
-            });
+            const cataloguedItem = await manager
+                .getRepository(Book)
+                .createQueryBuilder('book')
+                .setLock('pessimistic_write')
+                .where('book.isbn = :isbn', { isbn: itemData.isbn })
+                .getOne();
 
             const uncataloguedItem = await manager.getRepository(Uncatalogued).findOne({
                 where: { isbn: itemData.isbn },

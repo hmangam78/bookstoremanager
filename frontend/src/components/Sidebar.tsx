@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, Settings2, ChartBar } from "lucide-react";
+import { LayoutDashboard, Settings, Settings2, ChartBar, RotateCcw } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 

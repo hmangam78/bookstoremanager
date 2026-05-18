@@ -1,18 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, ManyToOne } from "typeorm";
+import { Provider, Publisher } from "src/provider-return/entities/providerReturnEntity";
 
 @Entity()
 export class Book {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column()
-    title: string;
+    title!: string;
 
     @Column()
-    author: string;
+    author!: string;
     
     @Column()
-    isbn: string;
+    isbn!: string;
     
     @Column({
         type: 'numeric',
@@ -24,38 +25,46 @@ export class Book {
             from: (value: string | null) => (value === null ? 0 : parseFloat(value)),
         },
     })
-    price: number;
+    price!: number;
     
     @Column({ type: 'int', default: 0 })
-    stock: number;
+    stock!: number;
     
     @Column()
-    description: string;
+    description!: string;
     
     @Column()
-    format: string;
+    format!: string;
 
     @Column({ type: 'text', array: true, default: [] })
-    genre: string[];
+    genre!: string[];
 
     @Column({ nullable: true, type: 'varchar' })
     imageUrl?: string;
 
-    @Column({ nullable: true })
-    publisher?: string;
+    @ManyToOne(() => Publisher, { nullable: true, eager: true })
+    @JoinColumn({ name: 'publisherId' })
+    publisher!: Publisher | null;
 
     @Column({ nullable: true })
-    distributor?: string;
+    publisherId!: number | null;
+
+    @ManyToOne(() => Provider, { nullable: true, eager: true })
+    @JoinColumn({ name: 'providerId' })
+    distributor!: Provider | null;
+
+    @Column({ nullable: true })
+    providerId!: number | null;
 }
 
 @Entity()
 export class Uncatalogued {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column()
-    isbn: string;
+    isbn!: string;
 
     @Column({ type: 'int' })
-    stock: number;
+    stock!: number;
 }

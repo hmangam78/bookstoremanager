@@ -89,6 +89,8 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
     format: initialData?.format || "",
     genre: initialData?.genre || [],
     imageUrl: initialData?.imageUrl || "",
+    publisher: initialData?.publisher || "",
+    distributor: initialData?.distributor || "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -127,8 +129,34 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
       setLoading(true);
       getBookById(bookId)
         .then((res) => {
-          const { id, ...bookData } = res.data;
-          setFormData(bookData);
+          const {
+            id: _id,
+            publisher: _publisher,
+            distributor: _distributor,
+            publisherId: _publisherId,
+            providerId: _providerId,
+            ...bookData
+          } = res.data;
+
+          setFormData({
+            title: bookData.title,
+            author: bookData.author,
+            description: bookData.description,
+            isbn: bookData.isbn,
+            price: bookData.price,
+            stock: bookData.stock,
+            format: bookData.format,
+            genre: bookData.genre,
+            imageUrl: bookData.imageUrl || "",
+            publisher:
+              typeof res.data.publisher === "string"
+                ? res.data.publisher
+                : res.data.publisher?.publisherName || "",
+            distributor:
+              typeof res.data.distributor === "string"
+                ? res.data.distributor
+                : res.data.distributor?.name || "",
+          });
         })
         .catch((err) => {
           setError("Error cargando libro");
@@ -346,10 +374,10 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
               <input
                 type="text"
                 name="publisher"
-                value={formData.publisher || ""}
+                value={(formData as CreateBookInput & { publisher?: string }).publisher || ""}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                placeholder="Editorial (opcional)"
+                placeholder="Nombre de la editorial (opcional)"
               />
             </div>
 
@@ -358,12 +386,13 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
               <input
                 type="text"
                 name="distributor"
-                value={formData.distributor || ""}
+                value={(formData as CreateBookInput & { distributor?: string }).distributor || ""}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-zinc-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900"
-                placeholder="Distribuidora (opcional)"
+                placeholder="Nombre de la distribuidora (opcional)"
               />
             </div>
+
           </div>
 
           <div>

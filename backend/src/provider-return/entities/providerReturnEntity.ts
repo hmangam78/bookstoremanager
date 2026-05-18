@@ -3,42 +3,55 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColum
 @Entity()
 export class Provider {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @Column({ unique: true })
-    name: string;
+    name!: string;
 
     @Column('text', { array: true, default: [] })
-    publishers: string[];
+    publishers!: string[];
 
     @OneToMany(() => ProviderReturn, (ret) => ret.provider)
-    returns: ProviderReturn[];
+    returns!: ProviderReturn[];
+}
+
+@Entity()
+export class Publisher {
+    @PrimaryGeneratedColumn()
+    id!: number;
+
+    @Column({ unique: true })
+    publisherName!: string;
 }
 
 @Entity()
 export class ProviderReturn {
     @PrimaryGeneratedColumn()
-    id: number;
+    id!: number;
 
     @ManyToOne(() => Provider, { eager: true, nullable: true })
     @JoinColumn({ name: 'providerId' })
-    provider: Provider | null;
+    provider!: Provider | null;
 
     @Column({ nullable: true })
-    providerId: number | null;
+    providerId!: number | null;
 
-    @Column()
-    publisher: string;
+    @ManyToOne(() => Publisher, { eager: true })
+    @JoinColumn({ name: 'publisherId' })
+    publisher!: Publisher;
+
+    @Column({ nullable: true })
+    publisherId!: number | null;
 
     @Column('jsonb', { default: [] })
-    items: { isbn: string; quantity: number }[];
+    items!: { isbn: string; quantity: number }[];
 
     @Column({ default: 'pending' })
-    status: 'pending' | 'completed' | 'cancelled';
+    status!: 'pending' | 'sent' | 'completed' | 'cancelled';
 
     @CreateDateColumn()
-    createdAt: Date;
+    createdAt!: Date;
 
     @UpdateDateColumn()
-    updatedAt: Date;
+    updatedAt!: Date;
 }

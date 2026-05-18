@@ -8,6 +8,15 @@ export class BooksController {
 
     constructor(private bookService: BooksService) {}
 
+    @Get('paginated')
+    getBooksPaginated(
+        @Query('page', ParseIntPipe) page: number = 1,
+        @Query('limit', ParseIntPipe) limit: number = 20,
+        @Query('query') query?: string,
+    ) {
+        return this.bookService.getBooksPaginated(page, limit, query);
+    }
+
     @Get('by-title-author-tag-isbn')
     getManyByTitleAuthorTagISBN(@Query('query') title: string) {
         return this.bookService.getManyByTitleAuthorTagISBN(title);
@@ -20,17 +29,18 @@ export class BooksController {
 
     @Get('isbn/:isbn')
     getOneByISBN(@Param('isbn') isbn: string) {
-        return this.bookService.getBookByISBN(isbn);
+        const cleanedIsbn = isbn.replace(/-/g, '');
+        return this.bookService.getBookByISBN(cleanedIsbn);
     }
     
     @Get('by-publisher')
-    getAllByPublisher(@Query('publisher') publisher: string) {
-        return this.bookService.getAllByPublisher(publisher);
+    getAllByPublisher(@Query('publisherId', ParseIntPipe) publisherId: number) {
+        return this.bookService.getAllByPublisher(publisherId);
     }
 
     @Get('by-distributor')
-    getAllByDistributor(@Query('distributor') distributor: string) {
-        return this.bookService.getAllByDistributor(distributor);
+    getAllByDistributor(@Query('providerId', ParseIntPipe) providerId: number) {
+        return this.bookService.getAllByDistributor(providerId);
     }
 
     @Get(':id')

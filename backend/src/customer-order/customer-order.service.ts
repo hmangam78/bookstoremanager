@@ -22,10 +22,11 @@ export class CustomerOrderService {
         // Enrich each order with book title and stock
         return Promise.all(
             orders.map(async (order) => {
-                const book = await this.bookRepository.findOne({
-                    where: { isbn: order.isbn },
-                    select: ['title', 'stock', 'isbn'],
-                });
+                const book = await this.bookRepository
+                    .createQueryBuilder('book')
+                    .select(['book.id', 'book.title', 'book.stock', 'book.isbn'])
+                    .where('book.isbn = :isbn', { isbn: order.isbn })
+                    .getOne();
                 return {
                     ...order,
                     bookTitle: book?.title || null,

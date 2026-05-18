@@ -51,10 +51,12 @@ export class StockReceiptService {
             // Process stock
             for (const element of stockReceiptOrder.items) {
                 // Search by ISBN
-                const dataBaseItem = await manager.getRepository(Book).findOne({
-                    where: { isbn: element.isbn },
-                    lock: { mode: 'pessimistic_write'},
-                });
+                const dataBaseItem = await manager
+                    .getRepository(Book)
+                    .createQueryBuilder('book')
+                    .setLock('pessimistic_write')
+                    .where('book.isbn = :isbn', { isbn: element.isbn })
+                    .getOne();
 
                 if (dataBaseItem) {
                     // Update stock and save
@@ -64,7 +66,7 @@ export class StockReceiptService {
                     await this.manageUncatalogued(element, manager);
                 }
 
-                this.recordMovement(manager, element.isbn, element.stock, 'stock captured', stockReceiptOrder.orderNo);
+                await this.recordMovement(manager, element.isbn, element.stock, 'stock captured', stockReceiptOrder.orderNo);
             }
             return savedOrder;
         });

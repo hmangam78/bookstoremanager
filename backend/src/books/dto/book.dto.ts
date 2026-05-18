@@ -10,32 +10,32 @@ import {
 
 export class CreateBookDTO {
     @IsString()
-    title: string;
+    title!: string;
 
     @IsString()
-    author: string;
+    author!: string;
 
     @IsString()
-    description: string;
+    description!: string;
 
     @IsString()
-    isbn: string;
+    isbn!: string;
 
     @IsNumber()
     @IsPositive({ message: 'price must be a positive number' })
-    price: number;
+    price!: number;
 
     @IsNumber()
     @Min(0, { message: 'stock cannot be negative '})
-    stock: number;
+    stock!: number;
 
     @IsString()
-    format: string;
+    format!: string;
 
     @IsArray()
     @ArrayNotEmpty()
     @IsString({ each: true })
-    genre: string[];
+    genre!: string[];
 
     @IsOptional()
     @IsString()

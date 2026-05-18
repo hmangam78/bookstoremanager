@@ -13,6 +13,7 @@ export default function App() {
         <Route path="/gestion" element={<GestionPage />} />
         <Route path="/informes" element={<Reports />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/devoluciones-proveedor" element={<Admin />} />
       </Routes>
     </Router>
   );

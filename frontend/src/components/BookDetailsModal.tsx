@@ -18,6 +18,16 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
   const [isAdding, setIsAdding] = useState(false);
   const [showCustomerOrder, setShowCustomerOrder] = useState(false);
 
+  const publisherLabel =
+    typeof book?.publisher === "string"
+      ? book.publisher
+      : book?.publisher?.publisherName;
+
+  const distributorLabel =
+    typeof book?.distributor === "string"
+      ? book.distributor
+      : book?.distributor?.name;
+
   useEffect(() => {
     setLoading(true);
     setError("");
@@ -198,17 +208,17 @@ export function BookDetailsModal({ bookId, onClose, onAddToBasket }: BookDetails
                   <p className="text-zinc-900">{book.format}</p>
                 </div>
 
-                {book.publisher && (
+                {publisherLabel && (
                   <div>
                     <p className="text-sm text-zinc-600 font-medium">Editorial</p>
-                    <p className="text-zinc-900">{book.publisher}</p>
+                    <p className="text-zinc-900">{publisherLabel}</p>
                   </div>
                 )}
 
-                {book.distributor && (
+                {distributorLabel && (
                   <div>
                     <p className="text-sm text-zinc-600 font-medium">Distribuidora</p>
-                    <p className="text-zinc-900">{book.distributor}</p>
+                    <p className="text-zinc-900">{distributorLabel}</p>
                   </div>
                 )}
               </div>
