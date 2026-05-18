@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import type { CreateBookInput } from "../services/books";
 import { createBook, updateBook, getBookById, deleteBook } from "../services/books";
 import { getUncataloguedByISBN } from "../services/stockReceipt";
-import { X, ChevronDown, Trash2, Info } from "lucide-react";
+import { login } from "../services/auth";
+import { X, ChevronDown, Trash2, Info, Lock, AlertTriangle } from "lucide-react";
 
 type BookFormProps = {
   bookId?: number;
@@ -99,6 +100,10 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
   const [genreSearch, setGenreSearch] = useState("");
   const [isGenreDropdownOpen, setIsGenreDropdownOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletePasswordError, setDeletePasswordError] = useState("");
+  const [deletePasswordLoading, setDeletePasswordLoading] = useState(false);
   const [uncataloguedInfo, setUncataloguedInfo] = useState<{ isbn: string; stock: number } | null>(null);
   const genreDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -245,24 +250,47 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     if (!bookId) return;
-    if (confirm(`¿Estás seguro de que quieres eliminar "${formData.title}"? Esta acción no se puede deshacer.`)) {
-      setIsDeleting(true);
-      setError("");
-      try {
-        await deleteBook(bookId);
-        onSave();
-      } catch (err) {
-        setError("Error al eliminar libro");
-        console.error(err);
-      } finally {
-        setIsDeleting(false);
-      }
+    setDeletePassword("");
+    setDeletePasswordError("");
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookId || !deletePassword.trim()) return;
+
+    setDeletePasswordLoading(true);
+    setDeletePasswordError("");
+
+    try {
+      // Verify password
+      await login(deletePassword);
+    } catch {
+      setDeletePasswordError("Contraseña incorrecta");
+      setDeletePasswordLoading(false);
+      return;
+    }
+
+    // Password correct — proceed with deletion
+    setIsDeleting(true);
+    setError("");
+    try {
+      await deleteBook(bookId);
+      onSave();
+    } catch (err) {
+      setError("Error al eliminar libro");
+      console.error(err);
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
+      setDeletePasswordLoading(false);
     }
   };
 
   return (
+    <>
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col p-6 pb-8">
         <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -513,7 +541,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
               {isEditing && !loading && formData.title && (
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={handleDeleteClick}
                   disabled={isDeleting}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition flex items-center gap-2"
                 >
@@ -542,5 +570,71 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
         </form>
       </div>
     </div>
-  );
+
+      {/* Password confirmation for deletion */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-white rounded-2xl p-6 shadow-xl border border-zinc-200 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 mb-6">
+              <AlertTriangle size={20} className="text-red-500" />
+              <h2 className="text-lg font-semibold text-zinc-900">Eliminar libro</h2>
+            </div>
+
+            <p className="text-sm text-zinc-600 mb-4">
+              ¿Estás seguro de que quieres eliminar <strong>"{formData.title}"</strong>? Esta acción no se puede deshacer.
+            </p>
+
+            <form onSubmit={handleDeleteConfirm} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Introduce tu contraseña para confirmar
+                </label>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Contraseña"
+                  autoFocus
+                  className="
+                    w-full rounded-xl border border-zinc-200
+                    bg-zinc-50 px-4 py-3 text-sm
+                    focus:outline-none focus:ring-2 focus:ring-zinc-400
+                  "
+                />
+              </div>
+
+              {deletePasswordError && (
+                <div className="rounded-lg bg-red-50 border border-red-200 p-3 flex items-start gap-2">
+                  <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                  <p className="text-sm text-red-700">{deletePasswordError}</p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeletePasswordError(""); }}
+                  className="px-4 py-2.5 rounded-xl border border-zinc-200 text-zinc-700 font-medium hover:bg-zinc-50 transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={!deletePassword.trim() || deletePasswordLoading || isDeleting}
+                  className="
+                    flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-white
+                    bg-red-600 hover:bg-red-700 transition
+                    disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
+                  "
+                >
+                  <Lock size={16} />
+                  {deletePasswordLoading ? "Verificando..." : isDeleting ? "Eliminando..." : "Eliminar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+  </>
+);
 }
