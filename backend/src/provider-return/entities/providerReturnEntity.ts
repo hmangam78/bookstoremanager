@@ -29,6 +29,9 @@ export class ProviderReturn {
     @PrimaryGeneratedColumn()
     id!: number;
 
+    @Column('varchar', { nullable: true })
+    reference!: string | null;
+
     @ManyToOne(() => Provider, { eager: true, nullable: true })
     @JoinColumn({ name: 'providerId' })
     provider!: Provider | null;

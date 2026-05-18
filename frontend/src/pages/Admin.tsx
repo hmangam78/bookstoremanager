@@ -28,6 +28,11 @@ function formatDateFromISO(isoString: string): string {
   return `${day}-${month}-${year}`;
 }
 
+function returnIdLabel(entry: { id: number; reference?: string | null }): string {
+  if (entry.reference) return `#${entry.id} · ${entry.reference}`;
+  return `#${entry.id}`;
+}
+
 export default function Admin() {
   const navigate = useNavigate();
   const [movementQuery, setMovementQuery] = useState("");
@@ -73,6 +78,7 @@ export default function Admin() {
   const [newReturnBookLoading, setNewReturnBookLoading] = useState(false);
   const [newReturnBookError, setNewReturnBookError] = useState("");
   const [newReturnItems, setNewReturnItems] = useState<Array<{ isbn: string; title: string; quantity: number }>>([]);
+  const [newReturnReference, setNewReturnReference] = useState("");
   const [newReturnResult, setNewReturnResult] = useState<ProviderReturnResponse[] | null>(null);
 
   // Auth state
@@ -316,7 +322,8 @@ export default function Admin() {
     setNewReturnResult(null);
     try {
       const { data } = await createProviderReturn(
-        newReturnItems.map((i) => ({ isbn: i.isbn, quantity: i.quantity }))
+        newReturnItems.map((i) => ({ isbn: i.isbn, quantity: i.quantity })),
+        newReturnReference.trim() || undefined
       );
       setNewReturnResult(data);
       setNewReturnItems([]);
@@ -335,6 +342,9 @@ export default function Admin() {
     setNewReturnQty(1);
     setNewReturnBook(null);
     setNewReturnBookError("");
+    setNewReturnItems([]);
+    setNewReturnReference("");
+    setNewReturnResult(null);
   };
 
   const handleReturnLoadActive = async () => {
@@ -623,6 +633,10 @@ export default function Admin() {
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                                 Devolución
                               </span>
+                            ) : mov.type === 'Devolución a proveedor' || mov.type === 'provider return' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                Dev. proveedor
+                              </span>
                             ) : mov.type === 'Inventory adjustment' ? (
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                 Ajuste
@@ -637,7 +651,13 @@ export default function Admin() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-zinc-500 font-mono text-xs">
-                            {mov.reference || "—"}
+                            {mov.type === 'Devolución a proveedor' || mov.type === 'provider return' ? (
+                              <span title={`Albarán devolución #${mov.reference}`}>
+                                #{mov.reference}
+                              </span>
+                            ) : (
+                              mov.reference || "—"
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1038,7 +1058,7 @@ export default function Admin() {
                             Proveedor: {entry.provider?.name ?? "Sin proveedor asignado"}
                           </p>
                         </div>
-                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700">#{entry.id}</span>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700">{returnIdLabel(entry)}</span>
                       </div>
                       <div className="mt-3 space-y-2">
                         {entry.items.map((item) => (
@@ -1086,7 +1106,7 @@ export default function Admin() {
                               <p className="font-medium text-zinc-900">{entry.publisher.publisherName}</p>
                               <p className="text-xs text-zinc-500">{entry.provider?.name ?? "Sin proveedor asignado"}</p>
                             </div>
-                            <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-600">#{entry.id}</span>
+                            <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-600">{returnIdLabel(entry)}</span>
                           </div>
                           <p className="mt-2 text-xs text-zinc-500">{entry.items.length} item(s)</p>
                         </button>
@@ -1115,6 +1135,10 @@ export default function Admin() {
                   ) : (
                     <>
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-xl bg-zinc-50 p-4">
+                          <p className="text-xs font-medium uppercase text-zinc-500">Albarán / Ref.</p>
+                          <p className="mt-1 font-semibold text-zinc-900">{returnIdLabel(returnSelected)}</p>
+                        </div>
                         <div className="rounded-xl bg-zinc-50 p-4">
                           <p className="text-xs font-medium uppercase text-zinc-500">Editorial</p>
                           <p className="mt-1 font-semibold text-zinc-900">{returnSelected.publisher.publisherName}</p>
@@ -1182,15 +1206,18 @@ export default function Admin() {
                               <p className="font-medium text-zinc-900">{entry.publisher.publisherName}</p>
                               <p className="text-xs text-zinc-500">{entry.provider?.name ?? "Sin proveedor asignado"}</p>
                             </div>
-                            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                              entry.status === "sent" ? "bg-blue-100 text-blue-700" :
-                              entry.status === "completed" ? "bg-emerald-100 text-emerald-700" :
-                              "bg-red-100 text-red-700"
-                            }`}>
-                              {entry.status === "sent" ? "Enviada" :
-                               entry.status === "completed" ? "Completada" :
-                               "Cancelada"}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full bg-zinc-100 px-2 py-1 text-xs font-semibold text-zinc-600">{returnIdLabel(entry)}</span>
+                              <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                                entry.status === "sent" ? "bg-blue-100 text-blue-700" :
+                                entry.status === "completed" ? "bg-emerald-100 text-emerald-700" :
+                                "bg-red-100 text-red-700"
+                              }`}>
+                                {entry.status === "sent" ? "Enviada" :
+                                 entry.status === "completed" ? "Completada" :
+                                 "Cancelada"}
+                              </span>
+                            </div>
                           </div>
                           <p className="mt-1 text-xs text-zinc-500">{entry.items.length} item(s)</p>
                           <p className="mt-1 text-xs text-zinc-400">Creada: {formatDateFromISO(entry.createdAt)}</p>
@@ -1227,6 +1254,10 @@ export default function Admin() {
                     <>
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl bg-zinc-50 p-4">
+                          <p className="text-xs font-medium uppercase text-zinc-500">Albarán / Ref.</p>
+                          <p className="mt-1 font-semibold text-zinc-900">{returnIdLabel(returnSelected)}</p>
+                        </div>
+                        <div className="rounded-xl bg-zinc-50 p-4">
                           <p className="text-xs font-medium uppercase text-zinc-500">Editorial</p>
                           <p className="mt-1 font-semibold text-zinc-900">{returnSelected.publisher.publisherName}</p>
                         </div>
@@ -1260,17 +1291,6 @@ export default function Admin() {
                 </div>
               </div>
             )}
-
-            {/* Empty state when no view is selected */}
-            {!returnShowActive && !returnShowNewModal && !newReturnResult && !returnShowFinished && (
-              <div className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 p-10 text-center">
-                <RotateCcw size={40} className="mx-auto text-zinc-300 mb-4" />
-                <h3 className="text-lg font-semibold text-zinc-700 mb-2">Devoluciones a proveedor</h3>
-                <p className="text-sm text-zinc-500 max-w-md mx-auto">
-                  Presiona "Nueva devolución" para crear una devolución de libros a tu distribuidor, "Ver devoluciones activas" para gestionar las pendientes de envío, o "Ver finalizadas" para consultar el historial.
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Nueva devolución modal */}
@@ -1282,6 +1302,16 @@ export default function Admin() {
                   <div>
                     <h3 className="text-lg font-semibold text-zinc-900">Nueva devolución a proveedor</h3>
                     <p className="text-sm text-zinc-500">Introduce ISBN y cantidad para cada libro</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1">Referencia / Albarán</label>
+                    <input
+                      type="text"
+                      value={newReturnReference}
+                      onChange={(e) => setNewReturnReference(e.target.value)}
+                      placeholder="Opcional..."
+                      className="w-52 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                    />
                   </div>
                   <button
                     onClick={handleNewReturnModalClose}

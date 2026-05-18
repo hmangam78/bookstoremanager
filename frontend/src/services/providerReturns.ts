@@ -8,6 +8,7 @@ export type ProviderReturnItemInput = {
 
 export type ProviderReturnResponse = {
   id: number;
+  reference: string | null;
   providerId: number | null;
   provider: ProviderSummary | null;
   publisherId: number;
@@ -18,8 +19,11 @@ export type ProviderReturnResponse = {
   updatedAt: string;
 };
 
-export function createProviderReturn(items: ProviderReturnItemInput[]) {
-  return api.post<ProviderReturnResponse[]>("/provider-return", { items });
+export function createProviderReturn(items: ProviderReturnItemInput[], reference?: string) {
+  return api.post<ProviderReturnResponse[]>("/provider-return", {
+    reference: reference || undefined,
+    items,
+  });
 }
 
 export function getProviderReturns() {

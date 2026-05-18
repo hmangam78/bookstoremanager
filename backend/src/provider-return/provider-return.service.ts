@@ -31,6 +31,7 @@ export class ProviderReturnService {
     private mapReturn(providerReturn: ProviderReturn): ProviderReturnResponseDTO {
         return {
             id: providerReturn.id,
+            reference: providerReturn.reference ?? null,
             providerId: providerReturn.providerId,
             provider: providerReturn.provider
                 ? {
@@ -133,6 +134,7 @@ export class ProviderReturnService {
                 publisherId: publisher.id,
                 providerId: provider?.id ?? null,
                 provider: provider ?? null,
+                reference: returnData.reference ?? null,
                 items,
                 status: 'pending',
             });
@@ -284,7 +286,7 @@ export class ProviderReturnService {
                     isbn: item.isbn,
                     quantity: -item.quantity,
                     type: 'Devolución a proveedor',
-                    reference: String(providerReturn.id),
+                    reference: providerReturn.reference ?? String(providerReturn.id),
                 });
                 await queryRunner.manager.save(newMovement);
             }
@@ -317,7 +319,7 @@ export class ProviderReturnService {
 
             book.stock -= item.quantity;
             await this.bookRepository.save(book);
-            await this.recordMovement(item.isbn, -item.quantity, 'Devolución a proveedor', providerReturn.id);
+            await this.recordMovement(item.isbn, -item.quantity, 'Devolución a proveedor', providerReturn.reference ?? String(providerReturn.id));
         }
     }
 

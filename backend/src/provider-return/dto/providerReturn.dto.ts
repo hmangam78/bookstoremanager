@@ -1,7 +1,11 @@
-import { IsInt, IsPositive, IsArray, IsString, MinLength, ValidateNested, ArrayNotEmpty } from "class-validator";
+import { IsInt, IsPositive, IsArray, IsString, MinLength, ValidateNested, ArrayNotEmpty, IsOptional } from "class-validator";
 import { Type } from "class-transformer";
 
 export class CreateProviderReturnDTO {
+    @IsOptional()
+    @IsString()
+    reference?: string;
+
     @IsArray()
     @ArrayNotEmpty()
     @ValidateNested({ each: true })
@@ -39,6 +43,7 @@ export class PublisherSummaryDTO {
 
 export class ProviderReturnResponseDTO {
     id!: number;
+    reference!: string | null;
     providerId!: number | null;
     provider!: ProviderSummaryDTO | null;
     publisherId!: number;
