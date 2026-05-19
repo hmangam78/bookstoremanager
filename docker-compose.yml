@@ -34,7 +34,7 @@ services:
       DB_USER: ${POSTGRES_USER:-bookstore}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-bookstore}
       DB_NAME: ${POSTGRES_DB:-bookstore}
-      DB_SYNCHRONIZE: "false"
+      DB_SYNCHRONIZE: "true"
       CORS_ORIGIN: http://localhost:8080
     ports:
       - "3001:3000"
