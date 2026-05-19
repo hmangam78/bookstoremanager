@@ -328,7 +328,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-            <div className="overflow-y-auto flex-1 space-y-4 pb-4">
+            <div className="overflow-y-auto flex-1 space-y-4 pb-4 pr-4">
               <div className="space-y-4 sm:grid sm:grid-cols-2 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Título *</label>
@@ -530,7 +530,7 @@ export function BookForm({ bookId, onSave, onCancel, initialData }: BookFormProp
               </div>
             </div>
 
-            <div className="flex gap-3 justify-between pt-4 border-t flex-shrink-0">
+            <div className="flex gap-3 justify-between pt-4 border-t flex-shrink-0 mt-2">
               <div>
                 {isEditing && !loading && formData.title && (
                   <button
